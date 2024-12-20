@@ -1,0 +1,32 @@
+		\titleformat{\chapter}
+		[hang]
+		{\Huge}
+		{}
+		{0em}
+		{}
+		[\Large {\begin{tikzpicture} [remember picture, overlay]
+		\pgftext[right,x=14.75cm,y=0.2cm]{\HUGE\bfseries 
+			前言}
+		\end{tikzpicture}}]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter*{}\normalfont\addcontentsline{toc}{part}{前言}
+
+高效能運算（High-Performance Computing, HPC）的世界最近見證了一個重要里程碑，即在美國橡樹嶺國家實驗室（Oak Ridge National Laboratory）部署的 \textbf{Frontier 超級電腦}首次達成 \textbf{Exascale} 性能。隨著計算性能的此項突破，一類全新的應用場景得以實現，包括：
+\begin{itemize}
+    \item 天氣與氣候預測，
+    \item 生物醫學研究，
+    \item 高端設備開發，
+    \item 新能源研究與探索，
+    \item 動畫設計，
+    \item 新材料研究，
+    \item 工程設計、模擬與分析，
+    \item 遙測數據處理，以及
+    \item 金融風險分析。
+\end{itemize}
+
+\textbf{AMD} 透過提供一系列高效能的 \textbf{CPU} 和 \textbf{GPU}，以及支持 \textbf{HIP} 和 \textbf{ROCm} 執行的開源軟體堆棧，推動了這些進展的實現。這個新興的程式設計生態系統提供了許多創新的功能，包括硬體加速器（如 \textbf{AMD} 和 \textbf{NVIDIA GPU}）的互操作性，以及對關鍵高效能編譯器（如 \textbf{LLVM}）、叢集部署及核心應用框架（如 \textbf{Raja}、\textbf{Kokkos}、\textbf{TensorFlow} 和 \textbf{PyTorch}）的支持，還包含多項高效能函式庫（如 \textbf{rocBLAS}、\textbf{rocSparse}、\textbf{MIOpen}、\textbf{RCCL} 和 \textbf{rocFFT}）。
+
+為配合這些進步，高效能運算社群也對此里程碑作出了貢獻，提供了最先進的第三方工具，用於性能監控、除錯器，以及視覺化工具。
+
+由 \textbf{Yifan Sun}、\textbf{Sabila Al Jannat}、\textbf{Trinayan Baruah} 和 \textbf{David Kaeli} 共同撰寫的《\textit{Accelerated Computing with HIP}》第二版，為高效能運算社群提供了一份具參考價值的指南，幫助程式開發人員充分利用 \textbf{Exascale} 計算的優勢。該書內容涵蓋以下主題：
+

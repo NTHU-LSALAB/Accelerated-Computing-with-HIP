@@ -1,0 +1,51 @@
+		\titleformat{\chapter}
+		[hang]
+		{\Huge}
+		{}
+		{0em}
+		{}
+		[\Large {\begin{tikzpicture} [remember picture, overlay]
+		\pgftext[right,x=14.75cm,y=0.2cm]{\HUGE\bfseries 
+			書寫規範}
+		\end{tikzpicture}}]
+
+\titlespacing*{\chapter}{0pt}{-30pt}{20pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter*{}\normalfont\addcontentsline{toc}{part}{書寫規範}
+
+% ======================
+% 技術書寫規範
+% ======================
+
+
+\section*{文件結構}
+\begin{itemize}
+    \item 每章使用獨立的 \code{.tex} 文件，主文件透過 \code{\textbackslash input} 引入。
+    \item 主文件負責樣式與章節組織，章節文件只包含內容。
+\end{itemize}
+
+
+\section*{字體命令}
+\begin{itemize}
+    \item \code{\textbackslash code\{example\}}：程式碼 ex: \code{printf}
+    \item \code{\textbackslash term\{斜體術語\}}：斜體術語 ex: \term{example}。
+    \item \code{\textbackslash bold\{粗體術語\}}：粗體術語 ex: \bold{example}。
+\end{itemize}
+
+
+\section*{引用命令}
+\begin{itemize}
+    \item \code{\textbackslash figref\{fig:example\}}：引用圖片。
+    \item \code{\textbackslash tabref\{tab:example\}}：引用表格。
+    \item \code{\textbackslash lstref\{lst:example\}}：引用程式碼塊。
+    \item \code{\textbackslash chapref\{chapter\}}：引用 Chapter。
+    \item \code{\textbackslash secref\{section\}}：引用 Section。
+    
+\end{itemize}
+
+\section*{程式碼模板(看左邊 code)}
+\begin{lstlisting}[language=Python, caption={範例程式碼：Python 計算平方值}, label={lst:example}]
+def square(x):
+    return x * x
+\end{lstlisting}
