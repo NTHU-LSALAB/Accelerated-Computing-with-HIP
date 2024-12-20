@@ -1,0 +1,11 @@
+\chapter{概覽}
+
+過去 40 年來，我們看到處理能力有了驚人的進步。微處理器設計師透過增加更多的 transistors 和提高 processor clock 的速度，利用 silicon 技術中的 Moore's Law 和 Dennard scaling，不斷推出性能更強的晶片。然而，在 21 世紀初，正如 IBM 的 Robert Dennard 預測的那樣，晶片的 clock frequency 達到了一個極限。這讓我們無法繼續提高 silicon 的功率密度，因為累積的能量會導致散熱變得非常困難。
+
+為了解決這個問題，晶片製造商開始尋求在單一晶片上加入多個 cores 的 parallel processing 技術。雖然這讓晶片性能有了大幅提升，但多數現有軟體仍是基於 sequential processing 模型設計的，這給程式設計師帶來了新的挑戰，他們需要尋找更創新的方法來在應用中實現 parallelism。
+
+最近，我們看到單一 microprocessor 的 cores 數量從幾個增加到十幾甚至幾十個。例如，AMD 的第三代 Ryzen Threadripper CPU 有多達 64 cores，而下一代預計將達到 128 cores。應用程式設計師開始利用 manycore CPUs 的優勢，因為它們在執行多個同時運行的 sequential threads 上非常強大。
+
+另一個值得注意的趨勢是 heterogeneous computing，這是一種使用專為特定任務設計的硬體平台。例如，顯示卡供應商如 ATI 和 NVIDIA 率先推出了專為資料並行和圖形密集型工作負載設計的 GPUs。這些 GPUs 的特殊設計讓它們性能強大，但也要求開發者使用專有的 graphics languages 撰寫程式，這對於它們作為加速器的廣泛應用造成了一定阻礙。
+
+\section{平行程式設計}
