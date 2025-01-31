@@ -11,7 +11,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter*{}\normalfont\addcontentsline{toc}{part}{前言}
 
-高效能運算（High-Performance Computing, HPC）的世界最近見證了一個重要里程碑，即在美國橡樹嶺國家實驗室（Oak Ridge National Laboratory）部署的 \textbf{Frontier 超級電腦}首次達成 \textbf{Exascale} 性能。隨著計算性能的此項突破，一類全新的應用場景得以實現，包括：
+高效能運算（High-Performance Computing, HPC）的世界最近見證了一個重要里程碑，即在美國橡樹嶺國家實驗室（Oak Ridge National Laboratory）部署的 \term{Frontier 超級電腦}首次達成 \term{Exascale} 性能。隨著計算性能的此項突破，一類全新的應用場景得以實現，包括：
 \begin{itemize}
     \item 天氣與氣候預測，
     \item 生物醫學研究，
@@ -24,9 +24,109 @@
     \item 金融風險分析。
 \end{itemize}
 
-\textbf{AMD} 透過提供一系列高效能的 \textbf{CPU} 和 \textbf{GPU}，以及支持 \textbf{HIP} 和 \textbf{ROCm} 執行的開源軟體堆棧，推動了這些進展的實現。這個新興的程式設計生態系統提供了許多創新的功能，包括硬體加速器（如 \textbf{AMD} 和 \textbf{NVIDIA GPU}）的互操作性，以及對關鍵高效能編譯器（如 \textbf{LLVM}）、叢集部署及核心應用框架（如 \textbf{Raja}、\textbf{Kokkos}、\textbf{TensorFlow} 和 \textbf{PyTorch}）的支持，還包含多項高效能函式庫（如 \textbf{rocBLAS}、\textbf{rocSparse}、\textbf{MIOpen}、\textbf{RCCL} 和 \textbf{rocFFT}）。
+AMD 透過提供一系列高效能的 CPU 和 GPU，以及支持 \term{HIP} 和 \term{ROCm} 執行的開源軟體堆棧，推動了這些進展的實現。這個新興的程式設計生態系統提供了許多創新的功能，包括硬體加速器（如 AMD 和 NVIDIA GPU）的互操作性，以及對關鍵高效能編譯器（如 \term{LLVM}）、叢集部署及核心應用框架（如 \term{Raja}、\term{Kokkos}、\term{TensorFlow} 和 \term{PyTorch}）的支持，還包含多項高效能函式庫（如 \term{rocBLAS}、\term{rocSparse}、\term{MIOpen}、\term{RCCL} 和 \term{rocFFT}）。
 
 為配合這些進步，高效能運算社群也對此里程碑作出了貢獻，提供了最先進的第三方工具，用於性能監控、除錯器，以及視覺化工具。
 
-由 \textbf{Yifan Sun}、\textbf{Sabila Al Jannat}、\textbf{Trinayan Baruah} 和 \textbf{David Kaeli} 共同撰寫的《\textit{Accelerated Computing with HIP}》第二版，為高效能運算社群提供了一份具參考價值的指南，幫助程式開發人員充分利用 \textbf{Exascale} 計算的優勢。該書內容涵蓋以下主題：
+由 \term{Yifan Sun}、\term{Sabila Al Jannat}、\term{Trinayan Baruah} 和 \term{David Kaeli} 共同撰寫的《\textit{Accelerated Computing with HIP}》第二版，為高效能運算社群提供了一份具參考價值的指南，幫助程式開發人員充分利用 \term{Exascale} 計算的優勢。本書包含 13 章內容與三個附錄，提供讀者一份簡明但完整的 \term{HIP} 程式設計相關參考。一開始會首先回顧圖形處理器和針對這些裝置的平行程式設計基礎，接著介紹 \term{HIP} 核心程式設計和 \term{HIP} runtime API。再之後的章節會涵蓋了 \term{HIP} 程式設計模式與 AMD GPU 架構，並介紹 \term{HIP} 除錯與效能分析工具還有效能優化方法。隨後討論 \term{ROCm} 函式庫、多 GPU 程式設計、機器學習框架和資料中心計算。最後，本書會介紹幾種第三方工具，而附錄部分則涵蓋了 \term{ROCm} 的安裝、AMD GPU CDNA 組合語言程式碼以及 \term{OmniTools}。書中包含多個 \term{HIP} 和 \term{ROCm} 程式範例，幫助讀者快速掌握 HIP 程式開發。
 
+這本教科書以良好的結構提供 \term{HIP} 加速計算的入門方法。有興趣深入了解科學計算的用戶可以參考官方文檔網站（\href{https://docs.amd.com}{https://docs.amd.com}）。本教科書為想入門 \term{HIP} 的開發者提供循序漸進的 \term{HIP} 程式設計指導，而 \term{ROCm} 的官方文件則可以幫助用戶過渡到更複雜的 API、程式設計模型和開發工具。進階開發者可以在以下的開源倉庫中找到關於 \term{HIP} 程式設計模型及相關函式庫實際實現的各種實作細節：
+
+\href{https://github.com/ROCm/HIP}{https://github.com/ROCm/HIP}
+
+\bold{Jack Joseph Dongarra}
+
+\bold{田納西大學電機工程與計算機科學系榮譽退休教授}
+
+\bold{橡樹嶺國家實驗室計算機科學與數學部門傑出研究人員}
+
+\bold{田納西大學創新計算實驗室創始主任}
+\bold{2021 年 ACM A.M. 圖靈獎得主}
+\newpage
+
+		\titleformat{\chapter}
+		[hang]
+		{\Huge}
+		{}
+		{0em}
+		{}
+		[\Large {\begin{tikzpicture} [remember picture, overlay]
+		\pgftext[right,x=14.75cm,y=0.2cm]{\HUGE\bfseries 
+			自序}
+		\end{tikzpicture}}]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter*{}\normalfont\addcontentsline{toc}{part}{自序}
+
+如果將人工智慧比作第四次工業革命的蒸汽引擎，那麼 GPU 就是為其提供動力的燃料。與通常僅設計個位數或數十個核心的 CPU 相比，GPU 通常擁有數千個核心，因此能在短短幾秒內完成數萬億次計算，正因其強大的算力， 在處理海量資料時，GPU 是極受歡迎的處理裝置，適用於各種計算任務。此外，GPU 讓用戶可以高效計算極需算力的人工神經網路。以前因計算成本過高而被認為不可能完成的任務（像是即時面部識別和自動駕駛）現在因 GPU 的能力而成為可能。
+
+CPU 和 GPU 架構之間存在根本性的差異，這使得 GPU 無法直接使用 CPU 的開發模型，抑或簡單的從 CPU 的開發模型修改而來。雖然在大多數高中和大學中即可學到 CPU 的程式設計，但只有少數學校提供平行計算課程。為了充分利用 GPU 的能力，程式開發者必須學習平行程式設計語言和框架。好消息是 AMD 提供了 \term{ROCm} 平台和 \term{HIP} 程式設計語言，使開發者能利用來自 AMD 及其他廠商的 GPU 加速其應用程式。
+
+本書目標是指導希望使用 GPU 在 \term{ROCm} 平台上開發 \term{HIP} 程式的開發者。讀者將會學到如何分析現實世界的問題並將其分解為獨立部分，以便能用 GPU 高效解決。本書旨在帶領開發者探索 GPU 硬體設計，並展示如何有效利用其獨特的硬體特性來優化軟體效能。最後，本書還包括如何透過調用函式庫來使用 \term{ROCm} 生態系統，在單一應用程式中有效利用多個 GPU。
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries} 
+  {}                          
+  {0em}                        
+  {}
+
+\titlespacing*{\section}
+  {0pt}   
+  {0.5em} 
+  {1em}   
+
+\section*{本書的目標讀者}
+本書專為希望利用 GPU 提升應用程式效能的開發者設計，而且因為 \term{HIP} 是一種可移植的語言，可在這兩個平台上運行，所以同時適用於 AMD 和 NVIDIA 的 GPU 開發者。此外，ROCm 是開源的，其他 GPU 開發者亦可支援此平台。本書不需要讀者先備 \term{CUDA} 開發的知識，然而我們會在書中突出了 \term{HIP} 與 \term{CUDA} 的不同之處，並說明如何將 \term{CUDA} 程式轉移到 \term{HIP}，從而促進互操作性，使單一應用程式能夠在不同的底層硬體上執行。對於非 \term{CUDA} 的開發者，本書會從基礎開始，介紹 \term{HIP} 此種功能完善的平行程式設計語言，並提供涵蓋各種相關程式設計範式的程式碼範例。
+
+因為 \term{HIP} 是 \term{C/C++} 的擴展，讀者需要具備基本的 \term{C/C++} 程式設計技能。但也因此，大多數語言特性（例如記憶體管理和變數型別）是相同的。具有平行程式設計經驗的讀者會更容易理解如並行和平行執行等概念，但相關開發經驗並非必要，因為本書將完整解釋 GPU 平行執行的樣式。
+
+\section*{本書架構}
+
+本書共分為 13 章和三個附錄。在第 1 章的一般簡介後，第 2 章至第 3 章會介紹 \term{HIP} 及其基本的核心語法。第 4 章和第 5 章中，我們會討論常用的 API 並介紹常見的 GPU 程式設計模式。第 6 章提供讀者 AMD GPU 架構的詳細介紹。第 7 章會介紹一些 \term{ROCm} 工具，這些工具可以幫助開發者對實際 GPU 應用程式進行除錯和效能分析。我們還會介紹 \term{Hipify}，它是一款可以自動將 \term{CUDA} 程式轉移成可在 AMD GPU 上運行的 \term{HIP} 程式的工具。在了解 GPU 架構和相關工具的基礎上，第 8 章涵蓋了多種優化 \term{HIP} 程式效能的方法。
+
+第 9 章我們會學習 \term{ROCm} 函式庫，這些函式庫為常見且知名的演算法（例如矩陣乘法和快速傅立葉變換）提供了高效能的實現。第 10 章介紹如何在單一程式中利用多個 GPU 以提升整體應用程式 throughput 的方法。第 11 章展示了如何在 AMD GPU 上運行深度神經網路應用，包括 \term{PyTorch} 和 \term{TensorFlow}。第 12 章解釋如何使用 GPU 容器和 \term{SLURM} 這些常見的框架來管理資料中心中的 GPU 工作負載。
+
+為了保證內容全面，本書還包含第 13 章，其中討論了第三方工具。來自不同組織的工具開發者對本章進行了貢獻，這些內容是本書獨有的。其中涵蓋的具體工具包括：
+
+\begin{itemize}
+    \item 第 13.1 節 由田納西大學諾克斯維爾分校的 Anthony Danalis 和 Heike Jagode 貢獻。本節介紹了 Performance API (PAPI)，這是一個用於追蹤 CPU 和 GPU 低階硬體操作，以及通訊網路和 I/O 系統的函式庫。
+    \item 第 13.2 節 由德國德累斯頓工業大學的 Bert Wesarg 和 William Williams 貢獻。本節介紹了 Vampire，這是一種用於可視化事件日誌的商業工具，以及 Score-P，生成 Vampire 事件日誌的首選方法。
+    \item 第 13.3 節 由加拿大蒙特婁理工學院的 Michel Dagenais、Arnaud Fiorini、Yoann Heitz 和 Bohémond Couka 貢獻。本節介紹 Trace Compass 和 Theia。與 Vampire 類似，Trace Compass 是一種針對高效能運算場景的追蹤可視化工具。而 Theia 是一個開放的雲端和桌面 IDE 擴展平台，可以連接 Trace Compass 提供效能分析支持。
+    \item 第 13.4 節 由俄勒岡大學的 Sameer Shende 和 Kevin Huck 貢獻。本節介紹了 Tau Performance System，這是一個平行效能評估工具包，用於識別系統資源和每個應用程式的時間消耗閾值。
+    \item 第 13.5 節 由 Perforce Software, Inc. 的 Bill Burns 和 John DelSignore 貢獻。本節介紹了 TotalView 除錯器，它同時支援 GUI 和命令列模式，並允許開發者以互動方式對 \term{HIP} 程式進行除錯。
+    \item 第 13.6 節 由德州休士頓萊斯大學的 Xiaozhu Meng、Dejan Grubisic 和 John Mellor–Crummey 貢獻。本節介紹了 HPC Toolkit，這是一個支援 GPU 加速應用程式的測量與分析工具。
+    \item 第 13.7 節 由 Louise Spellacy 貢獻。本節介紹了一組用於 GPU 效能分析與除錯的工具組。
+    \item 第 13.8 節 由俄勒岡大學的 Sameer Shende 貢獻。本節介紹 Extreme-Scale Scientific Software Stack，這是一個基於 Spack 套件管理器特別挑選的軟體產品集合。
+\end{itemize}
+
+\section*{範例程式碼}
+本書中有提供範例程式碼。為了簡潔起見，我們僅列出與上下文相關的範例，並且省略不斷重複的樣板程式碼。倘若需要完整程式，我們將程式碼置於 GitLab 中，網址如下：
+
+\href{https://gitlab.com/syifan/hipbookexample}{https://gitlab.com/syifan/hipbookexample}
+\newpage
+
+
+		\titleformat{\chapter}
+		[hang]
+		{\Huge}
+		{}
+		{0em}
+		{}
+		[\Large {\begin{tikzpicture} [remember picture, overlay]
+		\pgftext[right,x=14.75cm,y=0.2cm]{\HUGE\bfseries 
+			致謝}
+		\end{tikzpicture}}]
+\let\clearpage\relax
+\let\cleardoublepage\relax
+\chapter*{}\normalfont\addcontentsline{toc}{part}{致謝}
+
+本書的撰寫若無 AMD 的支持勢必無法完成。作者由衷感謝每一位負責協調專案、審閱章節以及提供各種原始資料的參與者。我們要先尤其感謝 Timour Paltashev 和 Marc Benson。Timour 是這個專案的發起者，他組織了作者與相關利益關係人的會議，大幅推動專案向前進展；Marc 則透過 AMD 高層的批准推動此專案，使作者獲得足夠的支持。
+
+我們也感謝 Roopa Malavally，她負責管理 AMD 的 ROCm 文件。Roopa 也將書籍撰寫團隊與 AMD 員工聯繫起來，協調重要的內部審閱，確保本書內容是最新且準確的。
+
+本書的章節經由 AMD 工程師審閱以保證正確性。我們感謝以下工程師的投入，他們提供了寶貴的見解與反饋。參與章節審閱的工程師如下（按姓氏排序）：SiuChi Chan、Dan Cyca、Jeff Daily、Diwakar Das、Wenkai Du、Rahul Garg、German Andryeyev、Joe Greathouse、Kenny Ho、Sreenivasa Murthy Kolam、Evgeniy Mankov、Laurent Morichetti、Braga Natarajan、Timour Paltashev、Christophe Paquot、Gina Sitaraman、Colin Smith、Peng Sun 和 Tony Tye。還有 AMD 的法律團隊，特別是 Suneet Gautam，自專案開始便參與其中，協助解決了諸多問題。
+
+此外，我們感謝第 13 章《第三方工具》的貢獻者所付出的努力。請參閱本書的序言，以了解第 13 章各節的具體貢獻者名單。
+
+再次感謝 AMD 的支持，讓這本書得以完成。我們特別感謝 Timour Paltashev、Mark Benson 和 Roopa Malavally，不論是他們在本書製作過程中的指導，還是協助將作者與 AMD 工程師聯繫起來，都讓作者能在需要時獲得支持。我們還要感謝 Hugo Andrade、Louise Crockett、Preethi Jayadev 和 Patrick Lysaght 在出版過程中的種種建議與支持。
+
+\newpage

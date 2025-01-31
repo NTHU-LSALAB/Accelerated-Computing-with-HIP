@@ -1,0 +1,225 @@
+\chapter{\term{CDNA} 組合語言}\label{AppendiceB}
+
+AMD 的 \term{CDNA} GPU 透過執行 \term{CDNA} 指令來完成計算任務。本章將介紹 \term{CDNA} 指令集與組合語言，這是一種人類可讀的程式表示形式。
+對組合語言有良好的理解，對於程式設計師掌握 GPU 程式設計具有以下幾個重要意義：
+
+\begin{enumerate}
+\item 能促進對 GPU 工作原理的深入理解，進而進行效能的調教。
+\item 在除錯 GPU 程式時，往往需要在指令層級上操作，而非僅在原始碼層級。理解組合語言可以幫助程式設計師在除錯過程中找到錯誤並修正。
+\item 直接使用組合語言編寫程式，通常是實現高效能的最佳方式。
+\end{enumerate}
+
+在本章中，我們將先介紹將 \term{CDNA} 程式轉換為組合語言時所需的基本工具。接著，我們會說明 \term{CDNA 應用程式二進位介面（Application Binary Interface, ABI）}，以幫助了解 \term{CDNA} 二進位檔案中儲存的資訊是如何載入至硬體中的。本章的主要部分將介紹 \term{CDNA} 指令集，以及這些指令如何對應到高階的 \term{CDNA} 程式。
+
+
+
+\section{使用 \term{CDNA} 組合語言程式碼}
+
+我們需要具備從 \term{HIP} 程式中提取 \term{CDNA} 組合語言程式碼的能力。在本節中，我們將介紹用於完成此任務的工具。首先，我們將從 \term{CDNA} 執行檔中提取 GPU 的二進位檔案，然後將其轉換為人類可讀的組合語言程式碼。
+
+\subsection{提取 \term{HIP} kernel 二進位程式碼}
+
+提取 CDNA 組合語言程式碼的其中一種簡單方法是使用第 \ref{sec:7.3} 節中介紹的 ROCm 除錯工具。程式設計師可在 GPU kernel 中設置中斷點，然後使用 \lstinline|disassemble| 指令來列出中斷點周圍的指令。然而，此方法需要執行目標程式，這在許多情況下可能既不實際又耗時。因此，我們需要另一種更高效的方法來完成此目標。
+
+HIP 編譯器 \lstinline|hipcc| 會將 GPU 程式編譯 fat binary，其中包含主機端和 GPU 端的二進位程式碼。
+若要查看 GPU 組合語言程式碼，首先需要查看編譯後的 HIP 二進位檔案中嵌入的 GPU 程式。ROCm 提供了 \lstinline|roc-obj-ls| 工具，該工具可列出嵌入的 GPU 程式。例如，如果執行命令 \lstinline|roc-obj-ls main|，
+其中 \lstinline|main| 是執行影像伽瑪校正任務（參見第 \ref{sec:gamma_correction} 節）所用的執行檔，則輸出中每一行都會包含嵌入程式的描述（如： \lstinline|hipv4-amdgcn-amd-amdhsa–gfx908|），以及通用資源識別碼（URI, 如：\lstinline|file://main#offset=24576&size=9936|）。
+該 URI 提供了嵌入程式的位置與大小資訊。
+接下來，使用 ROCm 提供的 \lstinline|roc-obj-extract| 工具，根據 \lstinline|roc-obj-ls| 輸出的 URI 提取 GPU 程式作為獨立檔案。
+在這個範例中，我們使用指令 \lstinline|roc-obj-extract "file://main#offset=24576&size=9936"|。輸出會儲存為 \lstinline|main-offset24576-size9936.co| 檔案。
+我們也可以結合上述兩個步驟。ROCm 的 \lstinline|roc-obj| 工具能直接從 HIP 執行檔中轉存所有嵌入的 GPU 程式。
+
+在預設的 ROCm 安裝中，上述工具（包括 \lstinline|roc-obj-ls|、\lstinline|roc-obj-extract| 和 \lstinline|roc-obj|）皆位於 \lstinline|/opt/rocm/bin| 目錄底下。
+
+輸出檔案（無論是由 \lstinline|roc-obj-extract| 還是 \lstinline|roc-obj| 生成）均為 ELF 格式的函數，GPU 指令儲存在 \lstinline|text| 區段中，而詮釋資料（metadata, 如所需的暫存器數量）則儲存在 \lstinline|note| 區段中。
+
+
+\subsection{反組譯 CDNA 二進位檔案}
+
+到目前為止，我們已介紹 GPU 執行檔如何以二進位檔案的形式表示。然而，這種格式並不具備人類可讀性，且難以分析。因此，我們必須將二進位檔案反組譯為組合語言檔案。
+ROCm 提供了 \lstinline|llvm-objdump| 工具來完成此任務。在標準安裝的情況下，\lstinline|llvm-objdump| 工具位於 \lstinline|/opt/rocm/llvm/bin| 路徑下。假設 GPU 執行檔為 \lstinline|bin.co|，我們可以使用指令 \lstinline|llvm-objdump --mcpu=gfx908 --disassemble bin.co| 來反組譯該二進位檔案。
+
+
+\section{CDNA 暫存器}
+
+CDNA 組合語言允許程式設計師使用多種類型的暫存器，包含 SGPR, VGPR 以及特殊用途的暫存器。每個 SGPR 或 VGPR 的大小為 4 個位元組（B）。一般用途暫存器的表示形式包含類型與索引，例如，s0 和 v0 分別代表 SGPR 和 VGPR 的第 0 個暫存器。指定暫存器名稱時，CDNA 組合語言不區分大小寫。
+
+為了指定更寬範圍的資料（例如 8 位元組或 16 位元組），最多可以將四個相鄰的暫存器結合。例如，v[0:3] 表示我們將使用四個暫存器來處理 16 位元組的資料，這些資料將同時被輸入至算術邏輯單元 (ALU) 進行運算。
+
+純量暫存器會被整個 wavefront 共享，而向量暫存器則屬於每個 work item. 例如，如果 work item 0 和 work item 1 同時存取 s0，它們會保證取得相同的數據；然而，從 work item 0 和 work item 1 存取 v0 時，通常會得到不同的值。
+
+CDNA 使用一些特殊用途的暫存器來協助 wavefront 執行，包含 PC、EXEC、VCC、SCC、VMCNT 和 LGKMCNT。需要注意的是，這些暫存器都是 wavefront 層級。每個 wavefront 都有自己的 PC、EXEC 等，它們可以視為特殊的純量暫存器。
+PC 儲存一個 8 位元組的位址，指向即將執行的下一條指令。
+EXEC 是一個 64 位的執行遮罩，用於保存 wavefront 中 work item 的條件 (predicate)，以進行條件執行 (predicated execution.) 如果 EXEC 中的一個位元為 0，則對應 work item 所執行的指令將不會生效。
+VCC 和 SCC 分別是 8 位元與 1 位元的暫存器，分別用來收集來自向量和純量比較指令的比較結果。
+VMCNT 和 LGKMCNT 是記憶體存取的計數器，詳細內容將於 \ref{sec:memory_access_instructions} 節介紹。
+
+需要注意的是，這裡提到的暫存器是邏輯上的暫存器，與 GPU 晶片上實體的暫存器有所不同。當 GPU 程式執行時，SPI 會動態地將硬體暫存器對應至邏輯暫存器，類似於作業系統分配虛擬記憶體的方式。
+透過動態分配的方式，多個 wavefront 可以在不發生暫存器衝突的情況下共存於同一個 CU 上。如果每個 wavefront 都使用較少的暫存器，該 CU 就能處理更多的 wavefront，從而有機會提升效能。
+最後，像是 PC、VCC 和 SCC 的這些特殊暫存器並不會動態分配，而是實體位於 Sequencer Block (SQ) 中的 wavefront slots（詳見 \ref{sec:sequencer} 節）。
+
+
+\section{指令類型}
+
+CDNA 指令集將指令分類為少數幾類，不同類別的指令通常需要不同的硬體單元來執行：
+
+純量指令（Scalar Instructions）用來表示由 wavefront 中所有 work item 共享的整數運算。執行純量指令時只處理一筆資料，且純量指令僅能存取純量暫存器。例如，\lstinline|s_add_u32 s0, s1, s2| 是一個將 \lstinline|s1| 和 \lstinline|s2| 中的兩個無號整數相加並將結果儲存回 \lstinline|s0| 的指令。
+
+向量指令（Vector Instructions）是 GPU 計算中最重要的指令類型，使用 SIMD 模式執行。一個向量指令最多可以處理 64 筆資料（CDNA 的 wavefront 大小為 64 個 work item）。例如，\lstinline|v_add_f32 v0, v1, s1| 是一個將單精度浮點數 \lstinline|v1| 和 \lstinline|s1| 相加並將結果儲存到 \lstinline|v0| 的指令。需要注意的是，執行一次該指令可以將 \lstinline|v1| 中的 64 個不同數字分別與 \lstinline|s1| 中的數字相加，結果的 64 個數字將存回 \lstinline|v0| 所指定的 64 個暫存器。
+
+純量記憶體指令（Scalar Memory Instructions）將資料從 GPU 記憶體載入至純量暫存器。執行一條純量記憶體指令只能載入一筆資料，常用於提取 kernel 參數、位址或全域的資訊（例如 workgroup 大小）。
+
+向量記憶體指令（Vector Memory Instructions）從主要記憶體中讀取或寫入資料。執行向量記憶體指令時，不同的 work item 會載入不同的資料。
+
+LDS 指令（LDS Instructions）用於從 LDS 記憶體讀取或寫入資料。
+
+分支指令（Branch Instructions）用來操作 PC，以重新導向控制流程。
+
+內部指令（Internal Instructions）是不被執行的特殊指令。這些指令大多用於支援不同類型的同步（如 barrier）或執行控制任務（如休眠或喚醒）。
+
+
+\section{記憶體存取指令}
+\label{sec:memory_access_instructions}
+
+記憶體指令可以為純量或是向量。最常見的記憶體操作類型為載入和儲存類型，不可分割操作（atomic operations）也被視為記憶體指令。
+
+GPU 記憶體操作通常涉及較長的延遲，依賴於執行緒層級的平行來隱藏記憶體存取的成本。當一個 wavefront 等待記憶體存取時，CU 可以執行來自另一個 wavefront 的指令。然而，在許多情況下，執行緒層級的平行度可能不足，CU 可能會閒置。為了避免這種情況，MI100 GPU 利用指令層級的平行。MI100 的 CU 在等待記憶體存取完成時，可以執行同一個 wavefront 中其他類型的指令。
+
+MI100 GPU 主要依賴於編譯器和幾個計數器（例如 VMCNT 與 LKGM-CNT）來決定哪些指令可以重疊執行。例如，當 CU 執行 \lstinline|global_load| 指令時，在通過 instruction pipeline 後與載入的資料返回之前，VMCNT 會增加。此時，CU 可能會執行更多來自同一個 wavefront 的指令，而不需要等待載入完成。當 \lstinline|global_load| 返回資料後，VMCNT 會減少。
+
+編譯器必須明確加上 \lstinline|waitcnt| 指令來與記憶體存取進行同步，並且該指令必須指定要等待的計數器及目標值。例如，如果我們希望使用從 \lstinline|global_load| 載入的資料，則必須在依賴於載入的資料的指令之前插入 \lstinline|waitcnt vmcnt(0)| 指令。
+
+計數器的目標值使 CU 能夠更好地控制進行中載入操作的重疊，以增加記憶體層級的平行度。我們提供以下的偽程式碼作為範例：
+
+\begin{lstlisting}[caption={記憶體載入的偽程式碼}]
+global_load [data1]
+global_load [data2]
+# Some calculation
+waitcnt vmcnt(1)
+# Use [data1]
+waitcnt vmcnt(0)
+# Use [data2]
+\end{lstlisting}
+
+執行第 1 行和第 2 行後，VMCNT 的值分別為 1 和 2。我們接著可以執行其他指令。在使用 \lstinline|data1| 之前，我們於第 4 行插入一行等待 VMCNT 的值變為 1 或更小的指令。當 VMCNT 的值為 1 時，只有 \lstinline|data1| 可以使用，而 \lstinline|data2| 尚未取得。此時，我們可以完成 \lstinline|data1| 的處理，無需等待 \lstinline|data2|。
+最後，在第 6 行，我們等待 VMCNT 的值回到 0，以能夠使用 \lstinline|data2|。這種機制允許進行細緻的同步控制，代價是要求同一 wavefront 的記憶體存取必須按照順序返回。
+
+
+\section{範例：位移複製}
+為了展示 HIP kernel 如何生成 CDNA 指令，我們使用一個位移複製的範例（參見程式碼 \ref{lst:shifted_copy_kernel} 和程式碼 \ref{lst:shifted_copy_kernel_asm}）。
+
+\begin{lstlisting}[caption={位移複製的 kernel}, label={lst:shifted_copy_kernel}, language={C++}]
+__global__ void shifted_copy (float *in, float *out) {
+    size_t gid = blockDim.x * blockIdx.x + threadIdx.x;
+    out[gid] = in[gid+4];
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={從位移複製 kernel 生成的組合語言程式碼}, label={lst:shifted_copy_kernel_asm}]
+s_load_dwordx4 s[0:3], s[4:5], 0
+v_lshlrev_b64 v[2:3], 2, v[2:3]
+s_waitcnt lgkmcnt(0)
+s_add_u32 s0, 16, s0
+s_addc_u32 s1, 0, s1
+v_mov_b32 v5, s1
+v_add_co_u32 v0, s0, v2
+v_addc_co_u32 v1, v5, v3
+global_load_dword v4, v[0:1]
+v_mov_b32 v5, s3
+v_add_co_u32 v0, s2, v2
+v_addc_co_u32 v1, v5, v3
+s_waitcnt vmcnt(0)
+global_store_dword v[0:1], v4
+s_endpgm
+\end{lstlisting}
+
+在 wavefront 執行之前，部分暫存器會被初始化為特定的值。在此範例中，\lstinline|s[4:5]| 會保存 kernel 參數的位址。第 1 行使用純量記憶體指令載入 16 個位元組的資料，結果儲存於 \lstinline|s[0:1]| 和 \lstinline|s[2:3]|，分別對應到 \lstinline|in| 和 \lstinline|out| 緩衝區的位址。
+
+\lstinline|v[2:3]| 儲存全域執行緒 ID，第 2 行將該值左移 2 位元（相當於整數乘以 4），以將全域執行緒 ID 轉換為所需的記憶體偏移量。由於第 2 行執行的 ALU 操作不依賴於第 1 行載入的資料，因此第 2 行可以在第 1 行未完成時執行。程式會在第 3 行使用 \lstinline|s_waitcnt| 指令等待第 1 行開始的記憶體讀取操作完成，因為第 4 行需要使用到 \lstinline|s0| 的值。
+
+第 4 行和第 5 行將 \lstinline|s0| 和 \lstinline|s1| 的值分別加上 16，其中 \lstinline|s[0:1]| 對應到 \lstinline|in| 緩衝區。這一步計算了原始碼中 \lstinline|in[gid+4]| 的位址偏移量。第 4 行和第 5 行展示了 CDNA GPU 如何使用兩條 32 位元整數指令來處理 64 位元的整數。這種模式在第 7–8 行和第 11–12 行再次出現。需要注意的是，第一條指令是 \lstinline|add|，而第二條指令是 \lstinline|addc|。\lstinline|addc| 與 \lstinline|add| 的不同之處在於它考慮了前一條 \lstinline|add| 的進位（carry）。
+
+接下來，第 6–8 行將偏移量加到基底位址上，並將結果儲存到 \lstinline|v[0:1]| 中以供載入操作使用。將位址複製到向量暫存器中是必要的，因為記憶體複製操作最終會使用儲存在向量暫存器中的位址。第 9 行會讀取資料，而當資料正在載入時，第 10–12 行會計算輸出緩衝區的位址。
+最後，在第 13 行進行同步以保證已經完成載入資料後，在第 14 行將資料儲存回輸出緩衝區。整個 wavefront 最終以 \lstinline|s_endpgm| 指令結束。
+
+\section{範例：分支處理}
+由於 GPU 以 wavefront 為單位發出指令，它提供了一種特殊的機制來處理程式中的分支，尤其是在 wavefront 的執行緒分歧並跟隨不同分支路徑時。在高階層次上，CDNA 指令集依賴於條件執行（predicated execution）和分支指令（branch instructions）來處理分支與分歧的行為。
+
+\begin{lstlisting}[caption={條件記憶體複製 kernel}, label={lst:conditional_copy_kernel}, language={C++}]
+__global__ void conditional_copy (double *in, double *out) {
+size_t gid = blockDim.x * blockIdx.x + threadIdx.x;
+    if (in[gid] > 0) {
+        out[gid] = in[gid];
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={從條件記憶體複製 kernel 生成的組合語言程式碼}, label={lst:conditional_copy_kernel_asm}]
+s_load_dwordx4 s[0:3], s[4:5], 0
+v_lshlrev_b64 v[2:3], 3, v[2:3]
+s_waitcnt lgkmcnt(0)
+v_mov_b32 v6, s1
+v_add_co_u32 v0, s0, v2
+v_addc_co_u32 v1, v6, v3
+global_load_dwordx2 v[4:5], v[0:1]
+s_waitcnt vmcnt(0)
+v_cmp_lt_f64 vcc, 0, v[4:5]
+s_and_saveexec_b64 s[4:5], vcc
+s_cbranch_execz BB0_2
+v_mov_b32 v6, s3
+v_add_co_u32 v0, s2, v2
+v_addc_co_u32 v1, v6, v3
+global_store_dword v[0:1], v[4:5]
+BB0_2:
+s_or_b64 exec, exec, s[4:5]
+s_endpgm
+\end{lstlisting}
+
+這邊我們用一個例子（參見程式碼 \ref{lst:conditional_copy_kernel}）來說明 HIP 編譯器如何處理分支。在這個 kernel 中，我們執行一個條件複製的操作，只有當元素為正數時，才會將輸入陣列中的元素複製到輸出陣列中。對應的組合語言程式碼請參見 \ref{lst:conditional_copy_kernel_asm}。
+
+程式碼 \ref{lst:conditional_copy_kernel_asm} 中的大多數指令與程式碼 \ref{lst:shifted_copy_kernel_asm} 相同。因此，我們只關注其中的差異。
+
+在第 9 行，程式會透過指令 \lstinline|lt| 來檢查數值是否小於零。比較的結果會儲存在 \lstinline|VCC| 中。如果 \lstinline|v[4:5]| 中的值為正數，則 \lstinline|VCC| 中對應的位元會被設為 1；否則，設為 0。
+
+\lstinline|s_and_saveexec_b64| 指令將比較結果套用到儲存在 \lstinline|EXEC| 暫存器中的執行遮罩。此指令會首先將目前的執行遮罩值儲存在 \lstinline|s[4:5]| 中，然後用 \lstinline|EXEC = VCC & EXEC| 更新執行遮罩。結合第 9 行與第 10 行，我們可以看到程式透過將 \lstinline|EXEC| 中的對應的位元設為 0，停用那些 \lstinline|v[4:5]| 中值為負數的執行緒。
+
+當所有執行緒的值皆為負數時，會發生一個特殊情況。第 11 行檢查執行遮罩 \lstinline|execz| 中的所有位元是否皆為 0。如果是，則跳過第 12 至第 15 行的指令。因此，PC 將更新至 \lstinline|BB0_2|。
+
+分歧的執行緒最終必須匯合。在這個例子中，匯合點是第 17 行。透過執行 \lstinline|EXEC OR S[4:5]| 並儲存分歧前的執行遮罩，執行遮罩會恢復到原來的狀態，且所有未受影響的執行緒（執行遮罩位元為 0）會繼續執行。
+
+
+\section{比較 CDNA2 與 CDNA3}
+
+隨著 MI100 GPU 的推出，AMD 持續改進其 GPU 微架構，陸續推出 MI200（CDNA2）與 MI350（CDNA3）系列 GPU。除了這些改進外，AMD 也擴展了 GPU 的指令集。雖然這些對指令集架構（ Instruction Set Architecture, ISA）的變更無法完全向下相容 CDNA1 的 ISA，但這些擴展對於本章先前討論的原則並不會有明顯的不同。AMD 決定優化這些 GPU，使其專注於計算而設計。CDNA GPU 的設計者已逐步淘汰與圖形相關的指令，轉而支援更全面的指令集。因此，這些 AMD GPU 能執行更強大的資料處理與計算操作。
+
+MI200 系列作為 AMD CDNA2 架構的一部分，是一款以計算為優化目標的 GPU 設計。其中的關鍵特性是簡化了 IMAGE（MIMG）操作。此架構僅保留了一組核心的操作碼，如 \lstinline|IMAGE_LOAD|、\lstinline|IMAGE_STORE| 與多種 \lstinline|IMAGE_ATOMIC| 的操作，將圖形相關指令簡化為常見的計算操作。
+
+CDNA2 微架構改變了 GPU 上可用的暫存器設計。在 CDNA1 架構中，累加向量通用暫存器（ACCVGPR）為一組獨立的暫存器，專為加速累加器單元使用的矩陣操作而設計。ACCVGPR 實體位於專用的暫存器檔案中，與一般的向量通用暫存器（VGPR）分離。由於與 VGPR 不相連，ACCVGPRs 無法直接使用標準 SIMD 指令進行寫入。在 CDNA2 中，ACCVGPR 與 VGPR 共用相同的實體暫存器池，允許 ACCVGPR 作為記憶體載入指令的目標暫存器，簡化了資料處理並提高了累加操作的效率。
+
+CDNA2 ISA 增強了矩陣操作、Data Parallel Primitives (DPP) 與 Packed Math 等提供新的計算能力的專門指令。矩陣指令利用 CDNA GPU 新增的矩陣核心，能在單個指令中完成小矩陣的乘法運算。CDNA2 還新增對更多矩陣大小的支援（詳見表 \ref{tab:matrix_sizes_cdna2}）。DPP 是現有指令的修飾符，允許執行緒存取同一 wavefront 內其他執行緒的暫存器。CDNA2 增加了對 64 位元資料類型的 DPP 支援。此外，AMD 擴展了 Packed Math 指令的功能（使其能夠在單一指令中執行多項操作），並新增了對單精度運算的支援（此前僅支援低精度數學運算）。
+
+\begin{table}[h!]
+\centering
+\caption{CDNA2 矩陣核心支援的新矩陣尺寸\\
+第一個矩陣的維度為 M × K，第二個矩陣的維度為 K × N}
+\label{tab:matrix_sizes_cdna2}
+\begin{tabular}{ccc}
+\hline
+\textbf{Input Type} & \textbf{Output Type} & \textbf{M × N × K} \\ \hline
+BF16 & F32 & 4 × 4 × 4 \\
+BF16 & F32 & 16 × 16 × 4 \\
+BF16 & F32 & 16 × 16 × 16 \\
+BF16 & F32 & 32 × 32 × 4 \\
+BF16 & F32 & 32 × 32 × 8 \\
+BF16 & F32 & 16 × 16 × 16 \\
+F64  & F64 & 16 × 16 × 4 \\
+F64  & F64 & 4 × 4 × 4 \\
+\hline
+\end{tabular}
+\end{table}
+
+CDNA3 指令集進一步減少了對圖形相關功能的支援，並增加了新的計算功能。例如，在 CDNA3，AMD 移除了所有圖形與取樣指令。同時，新增了多項記憶體與計算相關的功能。其中一項重大的改進是在 CDNA 架構內增加了新的矩陣操作，新增了如 \lstinline|V_MFMA_F32_16X16X16_XF32| 與 \lstinline|V_MFMA_F32_32X32X8_XF32| 等指令。對於 AMD 而言，這是對在神經網路模型中十分常見的低精度乘法的支援邁出了一大步。這些指令在操作單精度浮點數時，能大幅降低延遲與能耗。此外，為了滿足對精度需求較低但仍要求高效能的應用程式，矩陣核心延伸支援了 8 位元浮點數，包括 BF8（5 位元的 exponent 與 2 位元的 mantissa）與 FP8（4 位元的 exponent 與 3 位元的 mintissa）。此外，CDNA3 ISA 通過創新的 \lstinline|SMFMA| 指令支援稀疏矩陣運算，進一步提升在專用計算任務中的效率與效能。
+
+
+\section{結論}
+在本附錄中，我們簡單介紹了 CDNA 組合語言的使用，並探討了新版 CDNA 指令集的一些指令。我們可以看到 ROCm 提供了對組合語言的良好支援，使程式設計師能夠輕鬆地從 HIP 程式中提取組合語言程式碼。我們還強調了 GPU 組合語言在許多方面的獨特性，例如向量暫存器、動態暫存器分配、明確的記憶體訪問同步以及條件執行等。本章為讀者提供了撰寫 CDNA 組合語言的起步指引，同時也讓 HIP 程式設計師熟悉 CDNA 組合語言的指令，這在使用 ROCm 除錯工具 \lstinline|rocgdb| 進行除錯時非常有幫助。

@@ -78,7 +78,7 @@
 {\addvspace{10pt}}
 {}
 {\LARGE\bfseries}
-{\color{black}\dotfill\;\;\Large\bfseries Pagina \thecontentspage}
+{\color{black}\dotfill\;\;\Large\bfseries Pages \thecontentspage}
 	% Capitoli
 \titlecontents{chapter}[2.5pc]
 {\addvspace{15pt}}
@@ -86,27 +86,32 @@
 		\pgftext{\LArge\bfseries\bfseries\color{black}\hspace{-1cm} 章節\ \thecontentslabel{\color{white}.}\hspace{.5cm} }
 	\end{tikzpicture}\Large }
 {}
-{\color{black}\titlerule\; \;\Large\bfseries Pagina \thecontentspage}
+{\color{black}\titlerule\; \;\Large\bfseries Pages \thecontentspage}
 	% Sezioni
-\titlecontents{section}[8 pc]
+\titlecontents{section}[8.5 pc]
 {\addvspace{1pt}}
 {\contentslabel[\small\bfseries\thecontentslabel]{2pc}}
 {}
 {\dotfill\small \thecontentspage}
 []
-
+\titlecontents{subsection}[11 pc]
+{\addvspace{1pt}}
+{\contentslabel[\small\bfseries\thecontentslabel]{2pc}}
+{}
+{\dotfill\small \thecontentspage}
+[]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%															FORMATO TITOLI PARTI, CAPITOLI, SEZIONI, ...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage[sf,sl,outermarks]{titlesec}		% Typesetting capitoli/sezioni/...
-	% Sezioni
-\titleformat{\section}{\normalfont\sffamily\FontSec\bfseries}{\thesection}{.5em}{\ul}
+% Sezioni
+\titleformat{\section}{\normalfont\CJKsection\sffamily\FontSec\bfseries}{\thesection}{.5em}{\ul}
 \titlespacing*{\section}{0pt}{1.5\baselineskip}{.5\baselineskip}
-	% Sottosezioni
-\titleformat{\subsection}{\normalfont\sffamily\FontSubsec\bfseries}{\thesubsection}{.5em}{\ul}
+% Sottosezioni
+\titleformat{\subsection}{\normalfont\CJKsection\sffamily\FontSubsec\bfseries}{\thesubsection}{.5em}{\ul}
 \titlespacing*{\subsection}{0pt}{1\baselineskip}{0.5\baselineskip}
-	% Sottosottosezioni
-\titleformat{\subsubsection}{\normalfont\sffamily\FontSubsubsec\bfseries}{}{.5em}{\ul}
+% Sottosottosezioni
+\titleformat{\subsubsection}{\normalfont\CJKsection\sffamily\FontSubsubsec\bfseries}{\thesubsubsection}{.5em}{\ul}
 \titlespacing*{\subsubsection}{0pt}{1\baselineskip}{0.5\baselineskip}
 
 \titleformat{\chapter}[hang]

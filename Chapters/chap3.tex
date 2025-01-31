@@ -1,2 +1,218 @@
-\chapter{fill your chapter title here}
-\section{fill your section title here}
+\chapter{HIP kernel 程式設計 - 謝之豫}
+\section{在HIP kernel中呼叫函數}
+在本節中，我們探討 HIP 中的函數類型修飾符 (\term{function-type qualifiers})，一個在 GPU 程式設計中的重要概念，讓我們能指定函數的類型。函數類型修飾符告知編譯器某個函數應該在 CPU、GPU 或兩者上執行，從而讓我們充分利用異構計算 (\term{heterogeneous computing})的潛力。
+
+程序式程式設計（即使用函數）最初被引入早期的程式語言中，是為了要消除重複的程式碼。將多次使用的程式碼封裝為函數，不僅促進了可重複使用性，也提高了可維護性。程式設計者可以再利用先前實作好的程式碼，相信函數會提供其名稱所承諾的功能。儘管簡單的向量加法範例可能不需要額外的函數封裝，但實際的 GPU 程式往往會因為複雜性的增加而改變。我們自然會傾向於使用函數來管理這種複雜性。然而，HIP 程式要求程式設計者明確指出函數的用途 (例如：kernel 函數是否由 CPU 調用並在 GPU 上執行的)、GPU 函數(由 GPU 調用並在 GPU 上執行的)、或 CPU 函數(由 CPU 調用並在 CPU 上執行的)。
+
+由於 GPU 在 CPU 的監督下運作，GPU 並不會獨立啟動 CPU 上的函數執行；相反地，CPU 控制並管理整個過程，包括 GPU 執行的任務。HIP 引入了函數類型修飾符來滿足這一需求，使程式設計者能夠明確指定函數應該在哪裡執行。
+
+理解這些修飾符將幫助您有效地利用 GPU 的異構計算能力，並充分發揮其在加速應用程式方面的潛力。
+
+\subsection{HIP中的\_\_global\_\_函數}
+
+函數類型修飾符 \_\_global\_\_ 是 HIP 程式設計中的基本要素。\_\_global\_\_ 修飾符將函數指定為 kernel，使其能夠從host CPU 調用並在 GPU 上執行。Kernel 無法直接將結果回傳給主機 CPU，我們需要使用記憶體複製 API 來促進 CPU 和 GPU 之間的通訊（此部分已在第 2.3.3 節中討論）。
+
+Listing 3.1 中，展示了一個使用 \_\_global\_\_ 函數類型修飾符的 kernel範例。範例中，我們定義了一個 global 函數，其返回類型為 void，並具有明確的參數類型。不過，這裡出現了一個問題：如果我們需要在這個 kernel 中調用另一個函數時會發生什麼？我們將在下一節中探討此情況。
+
+\begin{lstlisting}[language=C, caption={在HIP kernel中使用\_\_global\_\_函數}, label={lst:example}]
+__global__ void vector_add(float *out, float *am gloat *b, int n) {
+    int id = blockDim.x * blockIdx.x + threadIdx.x;
+    if (id < N) {
+        out[id] = a[id] + b[id];
+    }
+}
+\end{lstlisting}
+
+\subsection{HIP 中的\code{\_\_device\_\_}函數}
+HIP 的 \_\_device\_\_ 函數類型修飾符允許程式設計者定義由 kernel 或其他 GPU 函數調用並在 GPU 上執行的函數。在 HIP 中，\_\_device\_\_ 函數用於封裝小型、可重複使用的計算，並可供多個 GPU 函數調用。這種函數透過將 GPU 程式碼分解為較小且可重複使用的元件來簡化並優化 GPU 程式設計。
+
+在Listing 3.2 中，我們定義了一個名為 \term{get\_global\_id} 的 device 函數。此函數計算一個thread在一個thread block內的全域索引並回傳計算結果。雖然此範例的實用性可能有限，但它演示了 device 函數的使用方法。接下來，我們有一個使用 \_\_global\_\_ 修飾符宣告的 kernel 函數 \term{myKernel}。此 kernel 函數由 GPU 上的大量thread同時執行，每個thread處理不同部分的資料，從而實現高度的平行性與更快的整體計算速度。在這裡，\code{myKernel} 使用 \term{get\_global\_id} device 函數計算thread的全域索引，並將結果存儲在變數 \term{id} 中。最後，在main函數中，使用三角括號符號 \code{<<< >>>} 調用 kernel。這種啟動機制允許多個 GPU 函數重複使用封裝成 device 函數的程式碼，實現程式碼再利用並簡化程式設計。
+
+採用這種模式，\_\_device\_\_ 函數為模組化 GPU 程式提供了強大的工具，強化了程式的再利用性並簡化了複雜的計算。通過使用 device 函數，開發者可以將程式碼分解為易於管理的元件，進而提升程式碼組織性與效能。
+\begin{lstlisting}[language=C, caption={在HIP kernel中使用\_\_device\_\_函數}, label={2nd:example}]
+__device__ int get_global_id(void) {
+    return blockDim.x * blockIdx.x + threadIdx.x;
+}
+
+__global__ void myKernel(int *a) {
+    int id = get_global_id();
+}
+
+int main(){
+    ...
+    myKernel<<<gridSize, blockSize>>>(a);
+    ...
+}
+\end{lstlisting}
+
+\subsection{HIP 中的\_\_host\_\_函數}
+除了 \_\_global\_\_ 和 \_\_device\_\_ 修飾符外，HIP還提供 \_\_host\_\_ 修飾符。在HIP程式設計中，這個修飾符在執行指定函數內容時扮演重要的角色。當函數使用\_\_host\_\_ 修飾符標記時，意味著該函數將在 CPU 上執行。
+
+在 HIP 中，帶有 \_\_host\_\_ 修飾符的函數必須由host明確調用，如 Listing 3.3 所示。這些函數主要設計用於執行和GPU相比更適合在 CPU 上完成的計算和任務。值得注意的是，在 HIP 中若未為函數指定修飾符，則默認該函數將在 CPU 上執行，如 Listing 3.4 所示。因此，\_\_host\_\_ 修飾符等價於未使用任何修飾符。\_\_host\_\_ 修飾符可以在函數的HIP執行環境中提供更高的清晰度和明確性。通過區分host執行和 GPU 執行的函數，開發人員可以準確地將任務分配給適當的處理單元，從而優化性能並更有效地利用資源。
+
+\begin{lstlisting}[language=C, caption={在HIP kernel中使用\_\_host\_\_函數}, label={3rd:example}]
+__host__ int add_numbers(int a, int b) {
+    return a + b;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C, caption={在HIP kernel中使用預設函數}, label={4th:example}]
+__host__ int add_numbers(int a, int b) {
+    return a + b;
+}
+\end{lstlisting}
+
+\subsection{結合\_\_host\_\_與\_\_device\_\_函數}
+
+在 HIP 程式設計中，\_\_device\_\_ 和 \_\_host\_\_ 修飾符可以結合使用，從而產生在 CPU 和 GPU 上可見且可執行的函數。這些結合的修飾符創建了所謂的「device與host函數」，為host和device之間的程式碼共享提供了一個有價值的選擇，從而消除了冗餘的程式碼。在 Listing 3.5 中，函數 \term{myFunction} 被設計為可從host和device程式碼中調用。該函數可以無縫地訪問host和device上的記憶體，這使得在這兩個執行環境之間共享程式碼和數據變得更加方便。
+
+\begin{lstlisting}[language=C, caption={在HIP kernel中結合\code{\_\_host\_\_}與\code{\_\_device\_\_}函數}, label={5th:example}]
+__device__ __host__ void myfunction(int *a) {
+    // 函數實作
+}
+\end{lstlisting}
+
+然而，程式設計者在使用結合修飾符時必須謹慎，因為某些特定於 GPU 的數據結構不能在同時具備host與device修飾符的函數中使用。例如，前述 Listing 3.2 中的 \term{get\_global\_id} 函數不能被賦予 host 修飾符。這種限制確保了程式的正確執行，並防止因 CPU 與 GPU 的不同程式模型而引起的潛在衝突。另一方面，結合device函數與global函數是不可能的。global 修飾符專門用於表示在device上執行的kernel函數，而 device 修飾符則指定該函數僅在 GPU 上執行，但不一定以平行方式執行。這表示該函數會在 GPU 的每個thread上單獨運行，而非平行執行。在同一函數宣告中結合這些修飾符可能會導致對函數行為與執行目標的混淆。同樣地，host函數也無法與global函數結合。host函數設計為僅在host上執行，且與device執行不相容。因此，將host與global函數合併為單一函數是不可行的。
+
+\section{在HIP kernel中使用模板}
+
+在前一節中，我們觀察到函數在減少重複程式碼的重要作用，尤其是device函數。然而，在某些情況下，某些函數仍可能包含重複的程式碼。例如，實作一個比較兩個整數並返回較大值的函數十分簡單。但如果我們需要比較兩個單精度浮點數並返回較大值，就需要針對輸入和輸出類型的細微差異重複撰寫程式碼。為了解決這個問題，關鍵在於模板 (template)。模板為 HIP 程式設計提供了一種強大機制，使我們能夠撰寫能處理各種資料型別的通用函數，從而避免事先指定資料型別的需求。模板的概念來自 C++ 語言 \cite{67}，它帶來了靈活性並提升了程式碼的再利用性。
+
+在 HIP 中實作模板，需要在程式碼前加上關鍵字 \term{template}，後面接角括號，如 Listing 3.6 所示。透過在角括號中定義數據型別作為參數，我們可以輕鬆調整程式碼以處理不同的資料型別，無需重複撰寫或修改程式碼。
+
+\begin{lstlisting}[language=C, caption={在HIP kernel中使用模板}, label={6th:example}]
+template<typename T>
+__global__ void vector_add(T *out, T *a, T *b, int n){
+    int tid = blockDim.x * blockIdx.x + threadIdx.x;
+    if (tid < N) {
+        out[tid] = a[tid] + b[tid];
+    }
+}
+\end{lstlisting}
+
+在Listing 3.6 中，我們展示了一個使用 HIP 寫成的簡單模板化函數範例，用於向量相加。\term{vector\_add} 函數被定義為一個通用函數，可以對任何支援加法運算的資料型別 \term{T} 進行操作。該函數接受四個參數，與我們之前用於實現 HIP 中向量相加的 \term{vector\_add} kernel類似。這個 \term{vector\_add} 函數啟動了kernel，並且可以通過指定 T 型別以不同型別呼叫。對於需要支援的每種資料型別，編譯器會動態生成對應版本的二進位碼，從而允許支援加號運算符的任何型別使用此kernel執行。值得注意的是，HIP 中的模板可以應用於global、device以及host函數，進一步擴展了其靈活性和適用性。
+
+適當利用模板可以增強程式的功能，不僅支援多種資料型別，還能降低程式碼的複雜性。這種方法簡化了處理通用計算的方式，同時保持靈活性並提高了程式碼的再利用性。
+
+\section{在HIP中使用struct}
+
+在 C 和 C++ 中，一個主要的特性是能夠使用struct 建立自定義資料型別。struct 能夠將多個值及多種型別組合在一起，以描述單一實體的屬性，從而更容易管理相關資料。本節將探討 HIP 中 struct 的基本概念，包括其語法，並提供其使用情境。此外，我們還將提供分步驟程式範例以強化這些概念。
+
+在 HIP 程式設計中，struct 的用法與 C \cite{41}或 C++ \cite{67}中的用法相似。struct 是一種複合資料型別，能將不同型別的值組合成一個單位，從而更輕鬆地管理和操作相關資料。這在需要處理大量互相關聯的資料時尤其有用，因為它可以以結構化的方式組織資料。透過使用 struct，我們可以將資料封裝為一個一致的單元，簡化程式內的資料傳遞，並降低錯誤或不一致的可能性。在 HIP 中使用 struct 的一個典型範例是處理複雜資料結構，像是描述二維空間中的點。舉例來說，假設需要儲存一組二維點的資訊。與其分別用不同的陣列來儲存每個點的 \term{x} 和 \term{y} 座標，不如使用 struct 來表示一個二維空間中的點。struct 中會包含兩個欄位：一個用於 \term{x} 座標，另一個用於 \term{y} 座標。透過 struct，我們可以將這些資料組織成一個物件，從而更方便地進行資料管理與操作。Listing 3.7 中的程式碼片段定義了一個用於表示二維空間中的點的 struct。在 HIP 中定義 struct 後，我們可以宣告該型別的變數並用資料進行初始化。在此範例中，我們宣告了一個型別為 \term{Point}的變數\term{p1}。透過點記號（\term{p1.x} 和 \term{p1.y}）我們可以訪問 \term{p1} 變數的 \term{x} 和 \term{y} 欄位，並分別為其賦值以表示 \term{x} 和 \term{y} 座標。例如，\term{p1.x= 1.0f} 創造了一個x座標為1.0的點，而\term{p1.y= 2.0f} 則將該點的y座標定為2.0。
+
+\begin{lstlisting}[language=C, caption={在HIP kernel中使用結構}, label={7th:example}]
+struct Point {
+    float x;
+    float y;
+}
+
+Point p1;
+p1.x = 1.0f;
+p1.y = 2.0f;
+\end{lstlisting}
+
+為了展示如何在 HIP 中使用 struct，我們提供一個範例，計算二維空間中一組的點到原點的距離。此程式利用歐幾里得距離公式 $\sqrt{x^2 + y^2}$ 計算點(x, y)到原點(0, 0)的距離。
+
+開發此解決方案時，我們需要包含必要的標頭檔。在這段程式碼中，我們使用\code{\#include <hip/hip\_runtime.h>}，為 HIP 實現提供所需的執行時期 API 和資料型別。為了增強程式碼的再利用率並提高效率，我們將使用巨集。在這段程式碼中，我們定義了一個名為 N 的巨集，表示陣列中元素的數量（見 Listing 3.8）。
+
+\begin{lstlisting}[language=C, caption={標頭檔與巨集}, label={8th:example}]
+#include <hip/hip_runtime.h>
+#define N 1000000000
+\end{lstlisting}
+
+接著，我們定義一個結構名為\code{TwoDimensionPoint}，其中包含三個欄位：\code{x}、\code{y} 和 \code{distToOrigin}（見 Listing 3.9）。然後我們可以使用 \code{TwoDimensionPoint} 來建立一個點的陣列。
+
+\begin{lstlisting}[language=C, caption={在HIP中使用struct}, label={9th:example}]
+struct TwoDimensionPoint {
+    float x;
+    float y;
+    float distToOrigin;
+}
+\end{lstlisting}
+
+接下來，我們實作 GPU kernel函數 \code{calculateDistToOrigin}，如 Listing 3.10 所示。此函數以 HIP 撰寫，負責計算 \code{TwoDimensionPoint} 陣列中每個元素的 \code{distToOrigin} 欄位。該函數接受兩個參數：\code{points}（\code{TwoDimensionPoint} 陣列）以及 \code{n}（陣列中元素的數量）。
+
+函數使用表達式 \code{blockDim.x * blockIdx.x + threadIdx.x} 來決定 GPU grid中當前thread的索引。透過 \code{if} 條件式語句檢查索引是否在陣列的範圍內。如果索引在範圍內，該函數會利用歐幾里得距離公式計算對應元素的 \term{distToOrigin} 欄位。此公式用於計算從原點 (0, 0) 到points陣列中索引為 idx、以 \bold{x} 和 \bold{y} 分量表示位置的點距離。
+
+\begin{lstlisting}[language=C, caption={TwoDimensionPoint GPU kernel}, label={10th:example}]
+__global__ void calculateDistToOrigin(TwodimensionPoint *points, int n) {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx < n) {
+        points[idx].distToOrigin = sqrt(points[idx].x * points[idx].x + points[idx].y * points[idx].y;
+    }
+}
+\end{lstlisting}
+
+在 Listing 3.11 的 CPU 程式碼中，我們宣告了一個指標 \code{h\_points}，它指向一個包含 \code{N} 個 \code{TwoDimensionPoint} 物件的陣列。為了在 CPU 上為host分配記憶體，我們使用 \code{malloc} 函數，請求分配大小為\code{sizeof(TwoDimensionPoint) * N}的記憶體。注意我們在 CPU 和 GPU 程式碼中都使用了該結構。接著在後續的 \code{for} 迴圈中，我們迭代 \code{N} 次，初始化陣列中每個 \code{TwoDimensionPoint} 物件的 \code{x} 和 \code{y} 值。我們使用 \code{rand()} 函數生成介於 0 和 \code{RAND\_MAX} 返回的最大值之間的隨機數。生成的隨機數除以 \code{RAND\_MAX} 以取得浮點值，然後將其分別儲存到 \code{TwoDimensionPoint} 物件的 \code{x} 和 \code{y} 欄位中。
+
+\begin{lstlisting}[language=C, caption={CPU記憶體的配置}, label={11th:example}]
+int main() {
+    TwoDimensionPoint *h_points;
+    h_points = (TwoDimensionPoint*) malloc(TwoDimensionPoint) * N);
+    for(int i = 0; i < N; i++) {
+        h_points[i].x = rand() / RNAD_MAX;
+        h_points[i].y = rand() / RNAD_MAX;
+    }
+}
+\end{lstlisting}
+
+接下來，如 Listing 3.12 中的程式碼片段所示，我們在 GPU 上分配記憶體。在這段程式碼中，我們定義了一個指標 \code{pointArray}，它指向一個存放 \code{TwoDimensionPoint} 物件的陣列。然而，這個指標用於存取device記憶體。我們使用 \code{hipMalloc()} 函數來為 \code{points} 陣列在 GPU 上分配記憶體。分配的大小為 \code{sizeof(TwoDimensionPoint) * N}。
+
+\begin{lstlisting}[language=C, caption={GPU記憶體的配置}, label={12th:example}]
+TwoDimensionPoint *pointArray;
+hipMalloc((void*) &pointArray, N * sizeof(TwoDimensionPoint));
+\end{lstlisting}
+
+為了確保host記憶體中的資料能夠在 GPU 上進行計算，我們需要將資料從host記憶體複製到 GPU 記憶體中。以下的程式碼片段（Listing 3.13）完成了這一複製操作。我們使用 \code{hipMemcpy} API 將資料從host記憶體（\code{h\_points}）複製到 GPU 記憶體（\code{points}）。要複製的資料大小為 \code{sizeof(TwoDimensionPoint) * N}。我們使用 \code{hipMemcpyHostToDevice} 標誌來指定記憶體複製的方向。
+
+\begin{lstlisting}[language=C, caption={從CPU到GPU的記憶體複製}, label={13th:example}]
+hipMemcpy(pointArray, h_points, sizeOf(TwoDimensionPoint) * N, hipMemcpyHostToDevice);
+\end{lstlisting}
+
+在成功將資料傳輸至 GPU 記憶體後，我們便可以啟動 \code{calculateDistToOrigin} kernel，在 GPU 上進行距離計算。在啟動 kernel 之前，我們定義每個 thread block 的大小。我們將 \code{blockSize} 設定為 256，表示每個 block 包含的 thread 數量。接著，我們計算 \code{gridSize}，以決定需要多少個 block 來處理所有的 \code{N} 個輸入資料點，依據指定的 block 大小進行分配。最後，我們使用 \code{<<<gridSize, blockSize>>>} 語法啟動 kernel，並將 \code{points} 陣列與點的數量 \code{N} 作為參數傳遞給 kernel。在 kernel 執行完成後，我們使用 \code{hipDeviceSynchronize()} 確保 CPU host等待 GPU device完成 kernel 的執行，才繼續執行剩餘的程式碼。
+
+\begin{lstlisting}[language=C, caption={啟動kernel}, label={14th:example}]
+int blockSize = 256;
+int gridSize = (N + blockSize - 1) / blockSize;
+calculateDistToOrigin<<<gridSize, blockSize>>>(pointArray, N);
+hipDeviceSynchronize();
+\end{lstlisting}
+
+待 kernel 執行完畢後，我們需要將結果從 GPU 記憶體複製回host記憶體。Listing 3.15 的程式碼片段說明了這一過程。此處，我們再次使用 \code{hipMemcpy}，但這次使用 \code{hipMemcpyDeviceToHost} 標誌，將結果從 GPU 記憶體（\code{points}）複製回host記憶體（\code{h_points}）。需要複製的資料大小依然是 \code{sizeof(TwoDimensionPoint) * N}。最後的步驟是將所有點到原點的距離輸出。在輸出時，我們遍歷 \code{h\_points} 陣列，並列印出每個點的索引值、\code{x} 和 \code{y} 座標，以及計算出的 \code{distToOrigin} 值。
+
+\begin{lstlisting}[language=C, caption={從GPU到CPU的記憶體複製}, label={15th:example}]
+hipMemcpy(h_points, pointArray, sizeof(TwoDimensionPoint) * N, hipMemcpyDeviceToHost);
+for(int i = 0; i < N; i++) {
+    printf("Point %d: (%f. %f), distToOrigin = %f\n", i, h_points[i].x, h_points[i.y, h_points[i].distToOrigin]);
+}
+\end{lstlisting}
+
+在結束程式之前，釋放已分配的 CPU 和 GPU 記憶體是非常重要的。透過使用 \code{hipFree}，我們釋放了分配在 GPU 上的記憶體，而使用 \code{free} 來釋放分配在 CPU 上的記憶體（見 Listing 3.16）。釋放記憶體有助於確保資源的有效利用。
+
+\begin{lstlisting}[language=C, caption={HIP中的記憶體釋放}, label={16th:example}]
+hipFree(pointArray);
+free(h_points);
+\end{lstlisting}
+
+在本節中，我們使用 HIP 程式設計實作了計算到原點距離的應用程式。該應用程式能夠處理包含 1000 個點的數據集，每個點代表其座標以及到原點的距離。我們的實作成功地為所有 1000 個點生成了輸出，計算了每個點座標與原點之間的距離。為了說明，我們截取了前 10 個點的輸出，如 Listing 3.17 所示。
+
+\begin{lstlisting}[language=C, caption={"Distance to Origin program" HIP 範例的輸出}, label={17th:example}]
+Point 0: (0.840188, 0.394383), distToOrigin = 0.928145
+Point 1: (0.783099, 0.798440), distToOrigin = 1.118370
+Point 2: (0.911647, 0.197551), distToOrigin = 0.932806
+Point 3: (0.335223, 0.768230), distToOrigin = 0.838183
+Point 4: (0.277775, 0.553970), distToOrigin = 0.619711
+Point 5: (0.477397, 0.628871), distToOrigin = 0.789548
+Point 6: (0.364784, 0.513401), distToOrigin = 0.629800
+Point 7: (0.952230, 0.916195), distToOrigin = 1.321422
+Point 8: (0.635712, 0.717297), distToOrigin = 0.958459
+Point 9: (0.141603, 0.606969), distToOrigin = 0.623268
+\end{lstlisting}
+
+在該應用程式中，我們選擇了特定的陣列大小以容納所有 1000 個點。輸出的點數是由應用程式中指定的陣列大小決定的。通過設定所需的陣列大小，我們得以計算並顯示每個點的座標及其距離。通過這個範例，我們展示了 HIP 程式設計在解決實際問題並獲取有意義結果方面的效能。借助 GPU 的強大計算能力，並結合struct等抽象資料型別的技術，我們能夠高效地處理和分析大量資料。
+
+\section{結語}
+
+在本章中，我們探討了一些可以使 GPU 程式設計更加簡潔且具備再利用性的進階技術。我們首先討論了 HIP 中的函數型別修飾符，這對於充分利用 GPU 的平行計算能力並優化應用程式的效能至關重要。我們還介紹了 HIP kernel中的template，這一機制受到 C++ template的啟發，消除了針對類似資料型別重複編寫程式碼的需求。此外，我們還展示了如何在 GPU 核心程式中使用struct，struct允許將相關的資料實體綁定在一起。通過將資料封裝到struct中，我們可以增強程式碼的組織性並簡化複雜的計算。這些方法可以有效提升 HIP 程式在可讀性、再利用性和可管理性方面的表現。
+
+\bibliography{FileAusiliari/Bibliografia}

@@ -1,2 +1,184 @@
-\chapter{Getting Started with HIP Programming}
-\section{Teoremi, dimostrazioni, proposizioni, lemmi, corollari}
+\chapter{Machine Learning with ROCm - 林展毅}
+
+GPU是加速機器學習(ML)應用程式的首選平台。為了最佳的匹配ML訓練和推論的運算需求，AMD為 ML社群提供了高效能的硬體和軟體生態系統。在硬體方面，AMD MI系列，特別是MI300 GPU，為單精度浮點數(fp32)提供高達35 TFLOPS，為半精度浮點數(fp16)提供383 TFLOPS的運算能力。
+
+在軟體方面，ROCm提供豐富的應用程式設計介面(API)和函式庫，能有效運用 AMD GPU 的運算能力。AMD的MIOpen函式庫包含針對深度神經網路(DNN)優化的核心，提升訓練效率。AMD還提供其他高度優化的函式庫，如rocBLAS和 ocSPARSE，實現常用運算的高效能執行（例如矩陣乘法和稀疏矩陣乘法）。
+
+在 AMD 提供豐富的硬體和軟體支援下，\term{ROCm} 能與廣泛使用的框架無縫整合，如PyTorch和TensorFlow，可在所有ROCm相容的GPU上運作。AMD將這些ML框架的底層複雜性抽象化，使開發者無需進行重大程式碼修改即可使用。在本章中，我們將提供如何在AMD GPU上使用PyTorch和TensorFlow的範例。
+
+\section{PyTorch on ROCm}
+
+PyTorch 是由 Facebook Research 開發的函式庫,用於高效地在 CPU 和 GPU 上建構機器學習應用程式。它讓程式設計師能夠透過基於 Python 的 PyTorch API 輕鬆定義神經網路結構，涵蓋各種層、優化器和資料載入器。PyTorch 後端能適應不同的硬體平台，為 CPU 和 GPU 提供優化的函數和核心。最初,PyTorch 只支援基於 CUDA 的 GPU 後端。然而，PyTorch 的靈活介面現在使 ROCm 能夠引入新的 AMD GPU 後端，運用 MI-Open 函式庫。
+
+ROCm 後端的設計與 torch.cuda 介面保持一致，使開發者能夠運用他們過去使用 torch.cuda 的經驗,因為它直接對應到 ROCm。這種相容性確保了開發的平穩過渡和連續性。例如許多機器學習應用程式中常見的函數呼叫 torch.cuda.is\_available()，是用於檢查 GPU 是否可用。在 ROCm 上運作時,此函數介面在 PyTorch 中保持不變。這種一致性消除了 Python 程式設計師為了 ROCm 相容性而更改程式碼的需求。對於大規模分散式訓練，在 ROCm 上運行的 PyTorch 運用高效能 RCCL 函式庫，確保高效的多 GPU 溝通。
+
+\subsection{Installing PyTorch}
+
+要在 ROCm GPU 上執行 PyTorch，首先需要在 AMD 平台上安裝 PyTorch。這可以透過 PyTorch 提供的 Docker 映像檔輕鬆完成。這將免除手動編譯程式碼的需求，能更方便的立即使用 PyTorch。
+
+\begin{lstlisting}[numbers=none, caption={獲取最新PyTorch docker映像檔的指令}, captionpos=t, label={lst:cmd_pytorch_docker_image}]
+docker pull rocm/pytorch:latest
+\end{lstlisting}
+
+要下載最新的 PyTorch Docker 映像檔，我們可以執行上述指令。這個指令會從公開儲存庫擷取最新版本。接著，我們使用下載的 PyTorch 映像檔來啟動 Docker 容器。
+
+\begin{lstlisting}[numbers=none, caption={安裝PyTorch的指令}, captionpos=t, label={lst:cmd_pytorch_install}]
+docker run -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --devices=/dev/kfd --device=/dev/dri --group-add video --ipc=host --shm-size 8G rocm/pytorch:latest.
+\end{lstlisting}
+
+上述指令建立了一個 Docker 容器，並設定關鍵參數以優化 PyTorch 執行。執行此指令後，可以存取系統層級資源，例如核心功能、安全權限、影像裝置和共享記憶體配置。
+
+一旦 Docker 容器安裝完成，就可以開始探索 PyTorch 的功能、進行機器學習模型實驗，並輕鬆執行程式碼。Docker 容器封裝了必要的相依性和設定，確保在不同系統上都能獲得順暢且一致的使用體驗。
+
+\subsection{Testing the PyTorch Installation}
+
+在使用 PyTorch 之前需要確保它已正確安裝。首先可以在 Python 中匯入 torch 套件，使用下方的指令。
+
+\begin{lstlisting}[numbers=none, caption={測試PyTorch安裝結果的指令}, captionpos=t, label={lst:cmd_pytorch_install_test}]
+python3 -c 'import torch' 2> /dev/null && echo 'Success' || echo 'Failure'
+\end{lstlisting}
+
+執行指令後，若輸出「Success」表示安裝成功，而「Failure」則表示需要進行疑難排解。
+
+\begin{lstlisting}[numbers=none, caption={確認GPU是否可用的指令}, captionpos=t, label={lst:cmd_pytorch_canusegpu}]
+python3 -c 'import torch; print(torch.cuda.is_available())'
+\end{lstlisting}
+
+接下來，我們需要檢查 GPU 是否可以被 PyTorch 存取。使用 PyTorch 的 GPU 存取介面 torch.cuda，其中 \bold{torch.cuda.is\_available()} 指令會檢查 GPU 是否可用於 PyTorch 運算。如果輸出為 True 表示 GPU 已準備就緒可進行加速運算，而如果是 False 則表示需要改用 CPU 進行運算，因為沒有可用的 GPU。
+
+\begin{lstlisting}[numbers=none, caption={驗證PyTorch的指令}, captionpos=t, label={lst:cmd_pytorch_validation}]
+BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT:-rocm} ./jenkins/pytorch/test.sh
+PYTORCH_TEST_WITH_ROCM=1 python3 test/test_nn.py --verbose
+\end{lstlisting}
+
+\subsection{Image Classification using Inception V3}
+
+按照先前敘述的步驟，PyTorch 現在應該可以正常運作。接下來的討論將使用 ROCm 運行機器學習應用程式，特別聚焦在 Inception v3 模型上。此模型經常用於影像處理任務。為了簡化深度神經網路的配置，將使用 torchvision，這是一個提供預構建模型、資料集以及預訓練權重存取的函式庫。
+
+在此範例中 \lstref{lst:image_classification_v3}，目標並非從頭開始訓練模型。而是使用預訓練參數來評估影像分類任務的效能。目標是評估 Inception v3 模型如何處理新的或未見過的影像。
+
+\begin{lstlisting}[language=python, caption={使用Inception V3進行影像分類}, captionpos=t, label={lst:image_classification_v3}]
+import torch
+import torchvision
+model = torchvision.hub.load('pytorch/vision:v0.10.0', 'inception_v3', pretrained=True)
+model.eval()
+import urllib
+url, filename = ("https://github.com/pytorch/hub/raw/master/images/dog.jpg", "dog.jpg") 
+try:
+   urllib.URLopener().retrieve(url, filename)
+except:
+   urllib.request.urlretrieve(url, filename)
+from PIL import Image
+from torchvision import transforms
+input_image = Image.open(filename)
+
+preprocess = transforms.Compose([
+   transforms.Resize(299),
+   transforms.CenterCrop(299),
+   transforms.ToTensor(),
+   transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+input_tensor = preprocess(input_image)
+input_batch = input_tensor.unsqueeze(0)
+if torch.cuda.is_available():
+   input_batch = input_batch.to('cuda')
+   model.to('cuda')
+with torch.no_grad(), torch.autograd.profiler.profile() as prof:
+   output = model(input_batch) 
+probabilities = torch.nn.functional.softmax(output[0], dim=0)
+print(probabilities)
+
+with open("imagenet_classes.txt", "r") as f:
+   categories = [s.strip() for s in f.readlines()]
+top5_prob, top5_catid = torch.topk(probabilities, 5)
+for i in range(top5_prob.size(0)):
+   category = categories[top5_catid[i]]
+   probability = top5_prob[i].item()
+   print(f"Category: {category}, Probability: {probability:.4f}")
+
+print(prof.key_averages().table(sort_by="cuda_time_total"))
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, caption={啟動Docker容器的指令}, captionpos=t, label={lst:cmd_docker_act_pyt}]
+docker run -it --mount type=bind,source=/home/yifan/HIP/Deep_Learning,target=/var/lib/jenkins --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --device=/dev/kfd --device=/dev/dri --group-add video --ipc=host --shm-size 8G rocm/pytorch:latest
+\end{lstlisting}
+
+使用上述指令，在 Docker 容器內執行 Python 腳本（\lstref{lst:image_classification_v3}）。此指令啟動一個 Docker 容器，指定使用 \bold{rocm/pytorch:latest} 映像檔，同時預設了一些設定參數和選項。值得注意的是，使用 \bold{--mount} 參數來建立主機與 Docker 容器之間的目錄連接。透過指定 \bold{type=bind}，告知 PyTorch 使用綁定掛載，這允許主機和容器環境之間進行簡單的資料共享和互動。source 參數指定要掛載的主機目錄路徑，而 target 參數則指定容器內對應的目錄位置。
+
+執行指定的指令後，系統會啟動一個互動式會話來啟動 Docker 容器。在容器的互動式模式中，可以使用以下指令下載影像分類所需的文字檔：
+
+\textit{wget https://raw.githubusercontent.com/pytorch/hub/master/imagenet\_classes.txt}
+
+要處理影像分類，執行 python3 filename.py 來執行 Python 腳本。這將輸出每個類別的機率，包括前 5 個預測類別。
+
+\section{TensorFlow on ROCm}
+
+\term{TensorFlow} 是另一個受 \term{ROCm} 支援的熱門機器學習函式庫。\term{TensorFlow} 最初由 Google 開發，用於加速模型開發。與 \term{PyTorch} 相似，\term{TensorFlow} 為程式設計師提供了用於建立和部署端對端機器學習模型的高階 API。ROCm 透過現成的 Docker 容器支援 \term{TensorFlow}，這可以簡化應用程式的開發和部署。在後端，\term{TensorFlow} 使用 ROCm 函式庫（例如 \term{MIOpen} 和 \term{rocBLAS}）和 \term{HIP} 呼叫來提供高效能的機器學習功能，使未經修改的 \term{TensorFlow} 程式碼能夠在支援 \term{ROCm} 的 AMD GPU 上執行。
+
+\subsection{Installing Tensorflow}
+
+要開始在 ROCm 上使用 TensorFlow，第一個步驟是透過下載相應的 Docker 映像檔來安裝 TensorFlow。
+
+\begin{lstlisting}[numbers=none, caption={獲取最新Tensorflow映像檔的指令}, captionpos=t, label={lst:cmd_get_tsf_image}]
+docker pull rocm/tensorflow:latest
+\end{lstlisting}
+
+與 PyTorch 相似，我們可以透過執行上述指令來拉取適用於 ROCm 的 TensorFlow Docker 映像檔。
+
+\begin{lstlisting}[numbers=none, caption={啟動Docker容器的指令}, captionpos=t, label={lst:cmd_docker_act_tsf}]
+docker run -it --network=host --device=/dev/kfd --device=/dev/dri --ipc=host --shm-size 16G --group-add video --cap-add=SYS_PTRACE --security-opt seccomp=unconfined rocm/tensorflow:latest
+\end{lstlisting}
+
+映像檔下載完成後，我們使用上述指令來執行容器。這個指令會以指定的設定來啟動容器，讓我們能夠與 ROCm Docker 映像檔提供的 TensorFlow 環境進行互動。
+
+\subsection{Testing the Tensorflow Installation}
+
+安裝完成後，必須確認 TensorFlow 是否正確安裝且可以運作。
+
+\begin{lstlisting}[numbers=none, caption={使用Docker容器執行python腳本的指令}, captionpos=t, label={lst:cmd_docker_run_python}]
+python3 -c 'import tensorflow' 2> /dev/null \&\& echo 'Success' || echo 'Failure'
+\end{lstlisting}
+
+若要驗證，我們使用上述指令在 Python 中匯入 TensorFlow 套件。如果 TensorFlow 安裝正確，輸出會顯示「success」，表示TensorFlow 已經可以使用。相反地，若輸出「Failure」則表示需要進一步的疑難排解。
+
+\subsection{Training using TensorFlow}
+
+安裝好 TensorFlow 後，我們使用 \lstref{lst:cmd_docker_act_tsttraining} 中的指令在 Docker 容器中運行一個簡單的 TensorFlow 範例。這個指令會以互動模式啟動 Docker 容器，允許執行 Python 檔案。執行此指令後，使用者將進入 Docker 容器的互動模式。一旦進入互動模式，我們可以執行指令、運行 Python 腳本，以及存取容器內的檔案。從主機掛載的目錄可在容器內以 /root 目錄的方式存取，便於主機和容器之間的檔案共享和存取。
+
+\begin{lstlisting}[numbers=none, caption={啟動Docker容器的指令}, captionpos=t, label={lst:cmd_docker_act_tsttraining}]
+docker run -it --mount type=bind,source=/home/yifan/HIP/Deep_Learning/ex_02,target=/root --device=/dev/kfd --device=/dev/dri --ipc=host --shm-size 16G --group-add video --cap-add=SYS_PTRACE --security-opt seccomp=unconfined rocm/tensorflow:latest
+\end{lstlisting}
+
+要執行 TensorFlow 的 Python 程式碼並觀察 GPU 或 CPU 的使用情況（\lstref{lst:tsf_training}），我們將使用以下指令：
+
+\begin{lstlisting}[language=python, caption={使用Tensor進行訓練}, captionpos=t, label={lst:tsf_training}]
+import tensorflow as tf
+from tensorflow import keras
+(train_images, train_labels), (test_images, test_labels) = keras.datasets.cifar10.load_data()
+train_images = train_images / 255.0
+test_images = test_images / 255.0
+model = keras.Sequential([
+   keras.layers.Flatten(input_shape=(32, 32, 3)),
+   keras.layers.Dense(128, activation='relu'),
+   keras.layers.Dense(10, activation='softmax')
+])
+model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
+
+if tf.test.is_gpu_available():
+   print('Training on GPU')
+   with tf.device('GPU:0'):
+       model.fit(train_images, train_labels, epochs=10, validation_data=(test_images, test_labels))
+else:
+   print('Training on CPU')
+   model.fit(train_images, train_labels, epochs=10, validation_data=(test_images, test_labels))
+
+test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
+print('Test accuracy:', test_acc)
+\end{lstlisting}
+
+執行 \lstref{lst:cmd_docker_act_tsttraining} 時，腳本會確認 GPU 的可用性。此外，在使用測試資料集評估其對先前未見過的資料的效能時，模型達到了約 0.4213 的測試準確率。這個數值反映了模型對新資料的泛化能力。此範例展示了如何運用 AMD GPU 來支援基礎模型的計算過程。
+
+\section{Conclusion}
+
+在本章中，介紹了兩個在 ROCm 系統上可用的最熱門機器學習框架：i) \term{PyTorch} 和 ii) \term{TensorFlow}。使用這些高階框架編寫的程式碼將可在由 \term{HIP} 函式庫支援的 ROCm 支援 GPU 上運行。

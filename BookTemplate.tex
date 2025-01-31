@@ -19,7 +19,7 @@
 \usepackage{hyperref}
 \usepackage{makeidx}
 \usepackage{xcolor}
-
+\usepackage{multirow}
 
 \usepackage{fontspec} % 字體
 \usepackage{xeCJK}    % 中文支持
@@ -28,7 +28,12 @@
 \linespread{1.5}
 
 \newcommand{\CJKsection}[1]{{\CJKfamily{titlefont}#1}} % 中文支持 Section Title
-\titleformat{\section}{\Large\bfseries\CJKsection}{\thesection}{1em}{}
+
+% \titleformat{\section}{\Large\bfseries\CJKsection}{\thesection}{1em}{}
+% \titleformat{\subsection}{\large\bfseries\CJKsection}{\thesubsection}{1.5em}{}
+% \titleformat{\subsubsection}{\normalsize\bfseries\CJKsection}{\thesubsubsection}{2em}{}
+
+
 
 % 自定義命令
 \newcommand{\code}[1]{\texttt{#1}}
@@ -40,6 +45,29 @@
 \newcommand{\chapref}[1]{\textbf{Chapter~\ref{#1}}}
 \newcommand{\secref}[1]{\textbf{Section~\ref{#1}}}
 
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+  backgroundcolor=\color{backcolour}, commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=t,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2
+}
+\lstset{style=mystyle}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -62,7 +90,7 @@
 	\begin{tikzpicture}[remember picture, overlay]
 		\clip (-80,-95) rectangle (40,10);
 		\pgftext[x=.8\textwidth, y=0.2cm]{\HUGE\bfseries 
-		Indice}						% Titolo indice
+		目錄}						% Titolo indice
 		\end{tikzpicture}
 	\vspace{-1cm}
 	
@@ -140,7 +168,7 @@
 \titlecontents{chapter}[2.5pc]
 {\addvspace{15pt}}
 {\begin{tikzpicture}
-		\pgftext{\LArge\bfseries\bfseries\color{black}\hspace{-1cm} Appendice\ \thecontentslabel{\color{white}.}\hspace{.5cm} }
+		\pgftext{\LArge\bfseries\bfseries\color{black}\hspace{-1cm} Appendix \ \thecontentslabel{\color{white}.}\hspace{.5cm} }
 	\end{tikzpicture}\Large }
 {}
 {\color{black}\titlerule\; \;\Large\bfseries Pagina \thecontentspage}
@@ -149,6 +177,8 @@
 
 \begin{appendices}
 	\input{Appendici/AppendiceA}
+	\input{Appendici/AppendiceB}
+	\input{Appendici/AppendiceC}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%									BACKMATTER
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -164,7 +194,7 @@
 	{}
 	[\Large {\begin{tikzpicture} [remember picture, overlay]
 	\pgftext[right,x=14.75cm,y=0.2cm]{\HUGE\bfseries 
-	Bibliografia}
+	Bibliography}
 	\end{tikzpicture}}]
 	
 	\nocite{*}
