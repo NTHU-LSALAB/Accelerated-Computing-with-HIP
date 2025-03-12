@@ -23,7 +23,7 @@ AMD 的 \term{CDNA} GPU 透過執行 \term{CDNA} 指令來完成計算任務。�
 
 HIP 編譯器 \lstinline|hipcc| 會將 GPU 程式編譯 fat binary，其中包含主機端和 GPU 端的二進位程式碼。
 若要查看 GPU 組合語言程式碼，首先需要查看編譯後的 HIP 二進位檔案中嵌入的 GPU 程式。ROCm 提供了 \lstinline|roc-obj-ls| 工具，該工具可列出嵌入的 GPU 程式。例如，如果執行命令 \lstinline|roc-obj-ls main|，
-其中 \lstinline|main| 是執行影像伽瑪校正任務（參見第 \ref{sec:gamma_correction} 節）所用的執行檔，則輸出中每一行都會包含嵌入程式的描述（如： \lstinline|hipv4-amdgcn-amd-amdhsa–gfx908|），以及通用資源識別碼（URI, 如：\lstinline|file://main#offset=24576&size=9936|）。
+其中 \lstinline|main| 是執行影像伽瑪校正任務（參見第 \ref{sec:gamma_correction} 節）所用的執行檔，則輸出中每一行都會包含嵌入程式的描述（如： \lstinline|hipv4-amdgcn-amd-amdhsa–gfx908|），以及通用資源識別碼（URI）, 如：\lstinline|file://main#offset=24576&size=9936|）。
 該 URI 提供了嵌入程式的位置與大小資訊。
 接下來，使用 ROCm 提供的 \lstinline|roc-obj-extract| 工具，根據 \lstinline|roc-obj-ls| 輸出的 URI 提取 GPU 程式作為獨立檔案。
 在這個範例中，我們使用指令 \lstinline|roc-obj-extract "file://main#offset=24576&size=9936"|。輸出會儲存為 \lstinline|main-offset24576-size9936.co| 檔案。
@@ -61,7 +61,7 @@ VMCNT 和 LGKMCNT 是記憶體存取的計數器，詳細內容將於 \ref{sec:m
 
 \section{指令類型}
 
-CDNA 指令集將指令分類為少數幾類，不同類別的指令通常需要不同的硬體單元來執行：
+CDNA 指令集將指令分類為幾個類別，不同類別的指令通常需要不同的硬體單元來執行：
 
 純量指令（Scalar Instructions）用來表示由 wavefront 中所有 work item 共享的整數運算。執行純量指令時只處理一筆資料，且純量指令僅能存取純量暫存器。例如，\lstinline|s_add_u32 s0, s1, s2| 是一個將 \lstinline|s1| 和 \lstinline|s2| 中的兩個無號整數相加並將結果儲存回 \lstinline|s0| 的指令。
 
@@ -81,7 +81,7 @@ LDS 指令（LDS Instructions）用於從 LDS 記憶體讀取或寫入資料。
 \section{記憶體存取指令}
 \label{sec:memory_access_instructions}
 
-記憶體指令可以為純量或是向量。最常見的記憶體操作類型為載入和儲存類型，不可分割操作（atomic operations）也被視為記憶體指令。
+記憶體指令可以為純量或是向量。最常見的記憶體操作類型為載入和儲存。不可分割操作（atomic operations）也被視為記憶體指令。
 
 GPU 記憶體操作通常涉及較長的延遲，依賴於執行緒層級的平行來隱藏記憶體存取的成本。當一個 wavefront 等待記憶體存取時，CU 可以執行來自另一個 wavefront 的指令。然而，在許多情況下，執行緒層級的平行度可能不足，CU 可能會閒置。為了避免這種情況，MI100 GPU 利用指令層級的平行。MI100 的 CU 在等待記憶體存取完成時，可以執行同一個 wavefront 中其他類型的指令。
 
@@ -94,15 +94,15 @@ MI100 GPU 主要依賴於編譯器和幾個計數器（例如 VMCNT 與 LKGM-CNT
 \begin{lstlisting}[caption={記憶體載入的偽程式碼}]
 global_load [data1]
 global_load [data2]
-# Some calculation
+# 某些運算
 waitcnt vmcnt(1)
-# Use [data1]
+# 使用 [data1]
 waitcnt vmcnt(0)
-# Use [data2]
+# 使用 [data2]
 \end{lstlisting}
 
 執行第 1 行和第 2 行後，VMCNT 的值分別為 1 和 2。我們接著可以執行其他指令。在使用 \lstinline|data1| 之前，我們於第 4 行插入一行等待 VMCNT 的值變為 1 或更小的指令。當 VMCNT 的值為 1 時，只有 \lstinline|data1| 可以使用，而 \lstinline|data2| 尚未取得。此時，我們可以完成 \lstinline|data1| 的處理，無需等待 \lstinline|data2|。
-最後，在第 6 行，我們等待 VMCNT 的值回到 0，以能夠使用 \lstinline|data2|。這種機制允許進行細緻的同步控制，代價是要求同一 wavefront 的記憶體存取必須按照順序返回。
+最後，在第 6 行，我們等待 VMCNT 的值回到 0，以能夠使用 \lstinline|data2|。這種機制可以進行細緻的同步控制，而代價是要求同一 wavefront 的記憶體存取必須按照順序返回。
 
 
 \section{範例：位移複製}
@@ -194,7 +194,7 @@ s_endpgm
 
 MI200 系列作為 AMD CDNA2 架構的一部分，是一款以計算為優化目標的 GPU 設計。其中的關鍵特性是簡化了 IMAGE（MIMG）操作。此架構僅保留了一組核心的操作碼，如 \lstinline|IMAGE_LOAD|、\lstinline|IMAGE_STORE| 與多種 \lstinline|IMAGE_ATOMIC| 的操作，將圖形相關指令簡化為常見的計算操作。
 
-CDNA2 微架構改變了 GPU 上可用的暫存器設計。在 CDNA1 架構中，累加向量通用暫存器（ACCVGPR）為一組獨立的暫存器，專為加速累加器單元使用的矩陣操作而設計。ACCVGPR 實體位於專用的暫存器檔案中，與一般的向量通用暫存器（VGPR）分離。由於與 VGPR 不相連，ACCVGPRs 無法直接使用標準 SIMD 指令進行寫入。在 CDNA2 中，ACCVGPR 與 VGPR 共用相同的實體暫存器池，允許 ACCVGPR 作為記憶體載入指令的目標暫存器，簡化了資料處理並提高了累加操作的效率。
+CDNA2 微架構改變了 GPU 上擁有的暫存器設計。在 CDNA1 架構中，累加向量通用暫存器（ACCVGPR）為一組獨立的暫存器，專為加速累加器單元使用的矩陣操作而設計。ACCVGPR 實體位於專用的暫存器檔案中，與一般的向量通用暫存器（VGPR）分離。由於與 VGPR 不相連，ACCVGPRs 無法直接使用標準 SIMD 指令進行寫入。在 CDNA2 中，ACCVGPR 與 VGPR 共用相同的實體暫存器池，允許 ACCVGPR 作為記憶體載入指令的目標暫存器，簡化了資料處理並提高了累加操作的效率。
 
 CDNA2 ISA 增強了矩陣操作、Data Parallel Primitives (DPP) 與 Packed Math 等提供新的計算能力的專門指令。矩陣指令利用 CDNA GPU 新增的矩陣核心，能在單個指令中完成小矩陣的乘法運算。CDNA2 還新增對更多矩陣大小的支援（詳見表 \ref{tab:matrix_sizes_cdna2}）。DPP 是現有指令的修飾符，允許執行緒存取同一 wavefront 內其他執行緒的暫存器。CDNA2 增加了對 64 位元資料類型的 DPP 支援。此外，AMD 擴展了 Packed Math 指令的功能（使其能夠在單一指令中執行多項操作），並新增了對單精度運算的支援（此前僅支援低精度數學運算）。
 
@@ -218,7 +218,7 @@ F64  & F64 & 4 × 4 × 4 \\
 \end{tabular}
 \end{table}
 
-CDNA3 指令集進一步減少了對圖形相關功能的支援，並增加了新的計算功能。例如，在 CDNA3，AMD 移除了所有圖形與取樣指令。同時，新增了多項記憶體與計算相關的功能。其中一項重大的改進是在 CDNA 架構內增加了新的矩陣操作，新增了如 \lstinline|V_MFMA_F32_16X16X16_XF32| 與 \lstinline|V_MFMA_F32_32X32X8_XF32| 等指令。對於 AMD 而言，這是對在神經網路模型中十分常見的低精度乘法的支援邁出了一大步。這些指令在操作單精度浮點數時，能大幅降低延遲與能耗。此外，為了滿足對精度需求較低但仍要求高效能的應用程式，矩陣核心延伸支援了 8 位元浮點數，包括 BF8（5 位元的 exponent 與 2 位元的 mantissa）與 FP8（4 位元的 exponent 與 3 位元的 mintissa）。此外，CDNA3 ISA 通過創新的 \lstinline|SMFMA| 指令支援稀疏矩陣運算，進一步提升在專用計算任務中的效率與效能。
+CDNA3 指令集進一步減少了對圖形相關功能的支援，並增加了新的計算功能。例如，在 CDNA3，AMD 移除了所有圖形與取樣指令。同時，新增了多項記憶體與計算相關的功能。其中一項重大的改進是在 CDNA 架構內增加了新的矩陣操作，新增了如 \lstinline|V_MFMA_F32_16X16X16_XF32| 與 \lstinline|V_MFMA_F32_32X32X8_XF32| 等指令。對於 AMD 而言，這是對在神經網路模型中十分常見的低精度乘法的支援邁出了一大步。這些指令在操作單精度浮點數時，能大幅降低延遲與能耗。此外，為了滿足對精度需求較低但仍要求高效能的應用程式，矩陣核心延伸支援了 8 位元浮點數，包括 BF8（5 位元的指數 (exponent) 與 2 位元的尾數 (mantissa)）與 FP8（4 位元的指數 與 3 位元的尾數）。此外，CDNA3 ISA 通過創新的 \lstinline|SMFMA| 指令支援稀疏矩陣運算，進一步提升在專用計算任務中的效率與效能。
 
 
 \section{結論}

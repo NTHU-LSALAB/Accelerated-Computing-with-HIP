@@ -29,9 +29,9 @@
 
 \newcommand{\CJKsection}[1]{{\CJKfamily{titlefont}#1}} % 中文支持 Section Title
 
-% \titleformat{\section}{\Large\bfseries\CJKsection}{\thesection}{1em}{}
-% \titleformat{\subsection}{\large\bfseries\CJKsection}{\thesubsection}{1.5em}{}
-% \titleformat{\subsubsection}{\normalsize\bfseries\CJKsection}{\thesubsubsection}{2em}{}
+\titleformat{\section}{\Large\bfseries\CJKsection}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries\CJKsection}{\thesubsection}{1.5em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\CJKsection}{\thesubsubsection}{2em}{}
 
 
 
@@ -200,9 +200,10 @@
 	\nocite{*}
 	\bibliographystyle{amsalpha}
 	\bibliography{FileAusiliari/Bibliografia}
-	\addcontentsline{toc}{part}{Bibliografia}
+	\addcontentsline{toc}{part}{Bibliography}
 \cleardoublepage
 %INDICE ANALITICO
+\begin{comment}
  \pagestyle{fancyIndiceAnalitico}
  	\renewcommand{\indexname}{}
 	% SISTEMA IL PROBLEMA DEL LINK ALL'INDICE ANALITICO
@@ -223,6 +224,7 @@
 	\addcontentsline{toc}{part}{Indice analitico}	
 	\vspace{-2cm}
 	\printindex
+    \end{comment}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{appendices}
 \end{document}

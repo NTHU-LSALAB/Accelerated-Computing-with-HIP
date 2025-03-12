@@ -101,7 +101,7 @@ Omniperf 的核心是一個可以以剖析模式啟動程式的命令列工具�
 
 \begin{itemize}
 \item \lstinline|-k|/\lstinline|--kernel| 可以根據 kernel 的名稱過濾 kernel。
-\item \lstinline|-d|/\lstinline|--dispatch| 可以根據 dispatch ID（即第 n 個派遣的 kernel）過濾 kernel。
+\item \lstinline|-d|/\lstinline|--dispatch| 可以根據派遣 ID（即第 n 個派遣的 kernel）過濾 kernel。
 \item \lstinline|-b|/\lstinline|--block| 可以根據硬體元件區塊 (hardware component blocks) 過濾指標。
 \end{itemize}
 
@@ -131,7 +131,7 @@ Omniperf 的核心是一個可以以剖析模式啟動程式的命令列工具�
 在這裡，參數 \lstinline|-p| 需要提供在剖析階段時收集的原始指標的路徑。
 
 分析工具會將處理後的資料以表格形式顯示在命令列介面中（參見圖 \ref{fig:omniperf-cli}）。輸出通常包含三個部分，包含高層次的狀態資訊（kernel 與其執行時間）、系統資訊以及系統的 Speed-of-
-Light 分析（即衍生的效能指標）。衍生的效能指標通常是能夠自我解釋的，但使用者仍然可以參考 Omniperf 文件來獲得更詳細的解釋。\footnote{\url{https://rocm.github.io/omniperf/performance_model.html}}
+Light 分析（即衍生的效能指標）。衍生的效能指標的意義通常是能夠自我解釋的，但使用者仍然可以參考 Omniperf 文件來獲得更詳細的解釋。\footnote{\url{https://rocm.github.io/omniperf/performance_model.html}}
 
 此外，Omniperf 的命令列介面分析工具也支援比較兩次不同的執行結果。假設原始剖析輸出儲存在 \lstinline|workload1/path| 和 \lstinline|workload2/path|，我們可以使用以下指令來比較它們：
 
@@ -154,7 +154,7 @@ Omniperf 的分析工具可以並排顯示衍生的效能指標，以方便比�
 \end{figure}
 
 
-\subsection{使用基於網頁的 GUI 進行分析}
+\subsection{使用網頁 GUI 進行分析}
 為了提供更使用者友善的效能分析介面，Omniperf 可以啟動一個基於 Flask \cite{grinberg2018flask} 的網頁伺服器。使用者可以透過網頁瀏覽器來檢視結果。只需要在 \lstinline|omniperf analyze| 指令中加入 \lstinline|--gui| 參數，如下指令所示：
 
 \lstinline|omniperf analyze -p workloads/vcopy/MI200 --gui|
@@ -165,14 +165,14 @@ Omniperf 的分析工具可以並排顯示衍生的效能指標，以方便比�
 
 \begin{figure}
     \centering
-    \includegraphics[width=1\linewidth]{Appendici/OmniperfWebInterface}
+    \includegraphics[width=1\linewidth]{Appendici/OmniperfWebInterface.png}
     \caption{基於網頁的 Omniperf 分析 GUI 介面}
     \label{fig:omniperf-web-interface}
 \end{figure}
 
 
 \subsection{使用 Grafana 進行分析}
-儘管簡單的基於網頁的 GUI 提供了更具使用者友善的效能分析介面，但呈現的資料仍然有限。為了進行全面的 GUI 基礎效能分析，Omniperf 使用了 Grafana \cite{chakraborty2021grafana}，一個受歡迎的資料視覺化框架。Grafana 需要將資料儲存於 MongoDB 資料庫中。因此，Omniperf 提供了一個工具，可以使用以下命令將原始指標匯入 MongoDB 資料庫：
+儘管簡單的網頁 GUI 提供了更具使用者友善的效能分析介面，但呈現的資料仍然有限。為了進行全面的 GUI 基礎效能分析，Omniperf 使用了 Grafana \cite{chakraborty2021grafana}，一個受歡迎的資料視覺化框架。Grafana 需要將資料儲存於 MongoDB 資料庫中。因此，Omniperf 提供了一個工具，可以使用以下命令將原始指標匯入 MongoDB 資料庫：
 
 \lstinline|omniperf database --import -H 127.0.0.1 -u temp -t asw -w workloads/vcopy/mi200|
 
@@ -180,15 +180,15 @@ Omniperf 的分析工具可以並排顯示衍生的效能指標，以方便比�
 
 \lstinline|omniperf_<team>_<workload>_<soc>|（如 \lstinline|omniperf_asw_vcopy_mi200|）。
 
-基於 Grafana 的分析工具有 18 個面板，每個面板表示不同類型的資料，以滿足使用者的各種需求。在這一節中，我們展示兩種不同的視圖：1) 指令混合面板（Instruction Mix Panel）與 2) L1 快取面板（L1 Cache Panel）
-指令混合面板（參見圖 \ref{fig:instruction-mix-panel}）顯示每個 wavefront 的平均指令數量，而 L1 快取面板（參見圖 \ref{fig:l1-cache-panel}）顯示 L1 快取命中率和頻寬使用率。欲了解更詳細的資訊和設定說明，讀者可以參考 Omniperf 的 Grafana 設定指南\footnote{\url{https://rocm.github.io/omniperf/installation.html#setup-grafana-instance}}。
+基於 Grafana 的分析工具有 18 個面板，每個面板表示不同類型的資料，以滿足使用者的各種需求。在這一節中，我們展示兩種不同的視圖：1) 綜合指令面板（Instruction Mix Panel）與 2) L1 快取面板（L1 Cache Panel）
+綜合指令面板（參見圖 \ref{fig:instruction-mix-panel}）顯示每個 wavefront 的平均指令數量，而 L1 快取面板（參見圖 \ref{fig:l1-cache-panel}）顯示 L1 快取命中率和頻寬使用率。欲了解更詳細的資訊和設定說明，讀者可以參考 Omniperf 的 Grafana 設定指南\footnote{\url{https://rocm.github.io/omniperf/installation.html#setup-grafana-instance}}。
 
 \begin{figure}
     \centering
     \begin{subfigure}[b]{\textwidth}
         \centering
         \includegraphics[width=0.5\linewidth]{Appendici/InstructionMixPanel.png}
-        \caption{指令混合面板 (Instruction Mix Panel) 顯示每個 wavefront 中每種指令類型的平均數量}
+        \caption{綜合指令面板 (Instruction Mix Panel) 顯示每個 wavefront 中每種指令類型的平均數量}
         \label{fig:instruction-mix-panel}
     \end{subfigure}
 

@@ -1,10 +1,10 @@
-\chapter{\term{ROCm} 函式庫 - 魏士勛}
+\chapter{\term{ROCm} 函式庫}
 \label{chap:ROCm 函式庫}
 在 \chapref{chap:getting_started_with_hip_programming}、\chapref{chap:AMD_GPU_internal}、\chapref{chap:GPU_programming_patterns} 和 \chapref{chap:HIP_runtime_API} 集中於使用 \term{HIP} 程式語言為 AMD GPU 創建功能強大且高效的程式。在本章中，我們將介紹 \term{ROCm} 平台提供的常用官方函式庫。整合這些函式庫不僅可以節省寶貴的開發時間，還能幫助非專業使用者更快地發揮 GPU 的效能。
 
 少數幾種算法和應用佔據了 GPU 執行的主要週期，其中最常見的是矩陣乘法運算，其次是線性代數計算。針對每個問題重新編寫這些操作會導致不必要的重複並浪費程式設計師的時間。因此，\term{HIP} 函式庫提供了經過配置管理的程式碼 reuse，既節省時間又減少除錯需求。
 
-一般來說，GPU 程式設計比 CPU 程式設計更具挑戰性。例如，大量的 GPU kernel thread 需要程式設計師考慮 thread 的集體行為，而非一個部分的行為。同時，GPU 程式的高度併發性也使得除錯更加困難。因此，提升 GPU 程式效能需要對 GPU 硬體有深入的理解。非專業的 GPU 程式設計師在編寫和調整 GPU 程式時往往會遇到困難，即使是有經驗的程式設計師也難以從 GPU 中「榨取每一滴」效能。\term{HIP} 提供了針對常用算法高度優化的函式庫，以提高程式設計師的生產力。這些函式庫還可以在程式中直接調用，而無需關注實現細節。
+一般來說，GPU 程式設計比 CPU 程式設計更具挑戰性。例如，大量的 GPU kernel 執行緒需要程式設計師考慮執行緒的集體行為，而非一個部分的行為。同時，GPU 程式的高度併發性也使得除錯更加困難。因此，提升 GPU 程式效能需要對 GPU 硬體有深入的理解。非專業的 GPU 程式設計師在編寫和調整 GPU 程式時往往會遇到困難，即使是有經驗的程式設計師也難以從 GPU 中「榨取每一滴」效能。\term{HIP} 提供了針對常用算法高度優化的函式庫，以提高程式設計師的生產力。這些函式庫還可以在程式中直接調用，而無需關注實現細節。
 
 本章介紹了一些廣泛使用的 \term{HIP} 函式庫，包括 \term{rocBLAS}、\term{rocSPARSE}、\term{rocFFT} 和 \term{rocRAND}。通常，對應於以「roc」為前綴的 \term{ROCm} 函式庫，每個函式庫都有一個以「hip」為前綴的 \term{HIP} 函式庫。\term{ROCm} 函式庫為 \term{ROCm} 平台提供高效能的實現，而 \term{HIP} 函式庫則作為一個輕量的相容層，分別在 AMD 或 NVIDIA GPU 平台上調用對應的 \term{ROCm} 或 \term{CUDA} 函式庫。本章將說明如何使用 \term{ROCm} 函式庫。讀者可以參考 \url{https://docs.amd.com/category/libraries}
 ，通過對程式碼進行少量修改來使用 \term{HIP} 函式庫。此外，讀者也可以通過上述連結找到更多函式庫的相關文檔。
@@ -15,7 +15,7 @@
 \subsection{使用 \term{rocBLAS}}
 \lstref{lst:rocBLAS} 示範了使用最簡單的 \term{rocBLAS} 函式之一：\term{rocblas\_sswap}。此函式僅需將緩衝區 dx 和 dy 中儲存的兩個向量內容互換。
 
-\begin{lstlisting}[language=C, caption={\term{rocBLAS} 函式庫範例。為簡化起見，錯誤處理程式碼已省略。}, captionpos=t, label={lst:rocBLAS}]
+\begin{lstlisting}[language=C, caption={\term{rocBLAS} 函式庫範例。為簡化起見，錯誤處理的程式碼已省略。}, captionpos=t, label={lst:rocBLAS}]
 #include <hip∕hip_runtime.h>
 #include <rocblas.h>
 #include <vector>
@@ -26,34 +26,34 @@ int main() {
     std::vector<float> hx(n);
     std::vector<float> hy(n);
 
-    ∕∕ Initialize host memory. Omitted.
+    ∕∕ 初始化主機記憶體(已省略)
 
-    ∕∕ Allocate device memory.
+    ∕∕ 分配裝置記憶體
     hipMalloc(&dx, n * sizeof(float));
     hipMalloc(&dy, n * sizeof(float));
 
-    ∕∕ Copy host memory to device.
+    ∕∕ 將主機記憶體複製到裝置
     rocblas_set_vector(n, sizeof(float),
         hx.data(), 1, dx, 1);
     rocblas_set_vector(n, sizeof(float),
         hy.data(), 1, dy, 1);
 
-    ∕∕ Create rocBLAS handle.
+    ∕∕ 建立 rocBLAS 的程式碼
     rocblas_handle handle;
     rocblas_create_handle(&handle);
 
-    ∕∕ Call the swap function. The "s" before "swap"
-    ∕∕ indicates the function being called works with
-    ∕∕ single-precision data.
+    ∕∕ 呼叫 swap 函數
+    ∕∕ 「s」位於「swap」之前
+    ∕∕ 表示該函數適用於單精度數據
     rocblas_sswap(handle, n, dx, 1, dy, 1);
 
-    ∕∕ Copy the data back from the GPU memory.
+    ∕∕ 將數據從 GPU 記憶體複製回來
     rocblas_get_vector(n, sizeof(float),
         dx, 1, hx.data(), 1);
     rocblas_get_vector(n, sizeof(float),
         dy, 1, hy.data(), 1);
 
-    ∕∕ Release resources.
+    ∕∕ 釋放資源
     hipFree(dx);
     hipFree(dy);
     rocblas_destroy_handle(handle);
@@ -71,7 +71,7 @@ int main() {
 第三，\term{rocBLAS} 提供了一組輔助函式，包括 \term{rocblas\_set\_vector}、\term{rocblas\_get\_vector}、\term{rocblas\_set\_matrix} 和 \term{rocblas\_get\_matrix}，用於在 CPU 和 GPU 之間傳輸數據。此外，\term{rocblas\_set\_vector} 和 \term{rocblas\_get\_vector} 函式需要兩個額外的整數參數。在 \lstref{lst:rocBLAS} 中，我們始終將這些參數賦值為 1，因為它們用於描述儲存數據的記憶體佈局。具體而言，這兩個函式中的參數表示需要複製的數據結構的 stride。如果將第 18 和 19 行按照 \lstref{lst:different} 的方式重寫，輔助函式將從 hx 向量中每隔一個值複製一次，並將這些值緊密地放置在 dx 向量中。
 
 \begin{lstlisting}[language=C, caption={使用不同值的範例。}, captionpos=t, label={lst:different}]
-∕∕ This line is equivalent to the following.
+∕∕ 此行等同於以下內容
 ∕∕ dx[0] = hx[0];
 ∕∕ dx[1] = hx[2];
 ∕∕ dx[2] = hx[4];
@@ -122,17 +122,17 @@ if (status != rocblas_status_success) {
 Strided-batch 允許函式僅對輸入 batch 中的部分元素執行操作。例如，若 batch 大小為 5，且 stride 為 2，則函式將處理輸入陣列中的第 0、2 和 4 個元素。這類操作在 \term{rocBLAS} 函式名稱中會加上 \texttt{"strided\_batched"} 後綴。
 
 \subsection{非同步執行}
-前面我們提到，GPU kernel 在執行過程中以 CUDA 流的形式啟動，\term{rocBLAS} kernel 也不例外。預設情況下，\term{rocBLAS} kernel 是以非同步的方式啟動到預設的 NULL CUDA 流。因此，程式設計師不應假設函式返回後結果會立即準備就緒。相反，需要使用 \term{HIP} API（例如 \term{hipDeviceSynchronize} 或 \term{hipStreamSynchronize}）進行適當的同步操作。使用預設非同步執行模型的優勢在於其程式設計的簡單性，這種模型允許將 CPU 執行與 \term{rocBLAS} 操作同時進行（請參見 \lstref{lst:overlap}）。
+前面我們提到，GPU kernel 在執行過程中以 CUDA streams 的形式啟動，\term{rocBLAS} kernel 也不例外。預設情況下，\term{rocBLAS} kernel 是以非同步的方式啟動到預設的 NULL CUDA stream。因此，程式設計師不應假設函式返回後結果會立即準備就緒。相反，需要使用 \term{HIP} API（例如 \term{hipDeviceSynchronize} 或 \term{hipStreamSynchronize}）進行適當的同步操作。使用預設非同步執行模型的優勢在於其程式設計的簡單性，這種模型允許將 CPU 執行與 \term{rocBLAS} 操作同時進行（請參見 \lstref{lst:overlap}）。
 
 \begin{lstlisting}[language=C, caption={\term{rocBLAS} 與 CPU 同時執行。}, captionpos=t, label={lst:overlap}]
 rocblas_sgemm(arguments...);
-∕∕ CPU work that overlaps with the rocblas_sgemm call.
+∕∕ 使用 rocblas_sgemm 呼叫同時進行的 CPU 工作
 hipDeviceSynchronize();
 \end{lstlisting}
 
-也可以使用 CUDA 流來控制同時呼叫的 API 。通過 \term{rocBLAS} API 呼叫，handle 會追蹤所使用的 CUDA 流。值得注意的是，使用多個 CUDA 流可以讓執行階段、驅動程式和硬體控制同時執行。如 \lstref{lst:stream} 所示，如果 GPU 擁有足夠的資源，第 10 行和第 13 行的 API 呼叫（例如 \bold{rocblas\_sgemm}）可以同時執行。
+也可以使用 CUDA streams 來控制同時呼叫的 API 。通過 \term{rocBLAS} API 呼叫，handle 會追蹤所使用的 CUDA streams。值得注意的是，使用多個 CUDA streams 可以讓執行階段、驅動程式和硬體控制同時執行。如 \lstref{lst:stream} 所示，如果 GPU 擁有足夠的資源，第 10 行和第 13 行的 API 呼叫（例如 \bold{rocblas\_sgemm}）可以同時執行。
 
-\begin{lstlisting}[language=C, caption={多 device 與多 CUDA 流的 \term{rocBLAS} 執行}, captionpos=t, label={lst:stream}]
+\begin{lstlisting}[language=C, caption={多裝置與多 CUDA streams 的 \term{rocBLAS} 執行}, captionpos=t, label={lst:stream}]
 hipStream_t stream1, stream2;
 rocblas_handle handle;
 
@@ -142,15 +142,15 @@ hipStreamCreate(&stream2);
 rocblas_create_handle(&handle);
 
 rocblas_set_stream(stream1);
-∕∕ API call 1 that uses stream1
+∕∕ 使用 stream1 的 API 呼叫 1
 
 rocblas_set_stream(stream2);
-∕∕ API call 2 that uses stream2
+∕∕ 使用 stream2 的 API 呼叫 2
 
 hipStreamSynchronize(stream1);
 hipStreamSynchronize(stream2);
 
-∕∕ Destroy the streams and the handle.
+∕∕ 銷毀 streams 和 handle
 \end{lstlisting}
 
 \subsection{MI100 上的 \term{rocBLAS}}
@@ -255,7 +255,7 @@ rocsparse_create_mat_descr(&descr);
 alpha = 1.0;
 beta = 0.0;
 
-∕∕ Allocate and fill in dVal, dRowPtr, dColInd.
+∕∕ 分配並填充 dVal、dRowPtr、dColInd
 
 rocsparse_scsrmm(
     handle,
@@ -268,7 +268,7 @@ rocsparse_scsrmm(
 hipDeviceSynchronize()
 \end{lstlisting}
 
-我們在 \lstref{lst:CSR} 中提供了一個使用 \term{rocSPARSE} API 的範例。與 \term{rocBLAS} 類似，\term{rocSPARSE} 需要一個 handle 物件來追蹤執行上下文。需要注意的是，\term{rocSPARSE} 的 handle 與 \term{rocBLAS} 的 handle 不同，當需要同時調用這兩個函式庫時，這些 handle 無法混用。每個 handle 僅適用於一個 device。因此，使用多個 device（即使非平行）時，需要為每個 device 創建一個 handle。此外，還需要一個 descriptor（\bold{descr}，範例中於 \lstref{lst:CSR} 第 2 行宣告）來告知 API 關於稀疏矩陣的組織方式（例如，索引是以零為基準還是一為基準，矩陣是列優先還是行優先）。預設情況下，描述子被設置為零基且行優先，因此在我們的範例中無需進行更改。
+我們在 \lstref{lst:CSR} 中提供了一個使用 \term{rocSPARSE} API 的範例。與 \term{rocBLAS} 類似，\term{rocSPARSE} 需要一個 handle 物件來追蹤執行上下文。需要注意的是，\term{rocSPARSE} 的 handle 與 \term{rocBLAS} 的 handle 不同，當需要同時調用這兩個函式庫時，這些 handle 無法混用。每個 handle 僅適用於一個裝置。因此，使用多個裝置（即使非平行）時，需要為每個裝置創建一個 handle。此外，還需要一個 descriptor（\bold{descr}，範例中於 \lstref{lst:CSR} 第 2 行宣告）來告知 API 關於稀疏矩陣的組織方式（例如，索引是以零為基準還是一為基準，矩陣是列優先還是行優先）。預設情況下，描述子被設置為零基且行優先，因此在我們的範例中無需進行更改。
 
 \begin{figure}[h]
     \centering
@@ -323,7 +323,7 @@ rocfft_setup();
 size_t N = 16;
 size_t Nbytes = N * sizeof(float2);
 
-∕∕ Create \textit{HIP} device buffer
+∕∕ 建立 HIP 裝置暫存區
 float2 *x;
 hipMalloc(&x, Nbytes);
 
@@ -334,10 +334,10 @@ for (size_t i = 0; i < N; i++) {
     cx[i].y = -1;
 }
 
-∕∕ Copy data to device
+∕∕ 初始化數據
 hipMemcpy(x, cx.data(), Nbytes, hipMemcpyHostToDevice);
 
-∕∕ Create rocFFT plan
+∕∕ 建立 rocFFT 計畫
 rocfft_plan plan = nullptr;
 size_t length = N;
 rocfft_plan_create(&plan,
@@ -346,7 +346,7 @@ rocfft_plan_create(&plan,
     rocfft_precision_single,
     1, &length, 1, nullptr);
 
-∕∕ Check if the plan requires a work buffer
+∕∕檢查該計畫是否需要工作暫存區
 size_t work_buf_size = 0;
 rocfft_plan_get_work_buffer_size(plan, &work_buf_size);
 void* work_buf = nullptr;
@@ -357,22 +357,22 @@ if(work_buf_size) {
     rocfft_execution_info_set_work_buffer(info, work_buf, work_buf_size);
 }
 
-∕∕ Execute plan
+∕∕ 執行計畫
 rocfft_execute(plan, (void**) &x, nullptr, info);
 
-∕∕ Wait for execution to finish
+∕∕ 等待執行結束
 hipDeviceSynchronize();
 
-∕∕ Clean up work buffer
+∕∕ 清理工作緩衝區
 if(work_buf_size) {
     hipFree(work_buf);
     rocfft_execution_info_destroy(info);
 }
 
 
-∕∕ Use the results (skipped).
+∕∕ 使用結果（已跳過）
 
-∕∕ Clean up
+∕∕ 進行清理
 rocfft_plan_destroy(plan);
 rocfft_cleanup();
 \end{lstlisting}
@@ -416,16 +416,16 @@ int main() {
 
     hipMalloc((void **)&d_rand, n * sizeof(float));
 
-    ∕∕ Step 1: Create a random number generator.
+    ∕∕ 步驟 1：建立隨機數產生器
     rocrand_create_generator(&gen, ROCRAND_RNG_PSEUDO_DEFAULT);
 
-    ∕∕ Step 2: Set a seed.
+    ∕∕ 步驟 2：設置 seed
     rocrand_set_seed(gen, time(NULL));
 
-    ∕∕ Step 3: Generate the random numbers.
+    ∕∕ 步驟 3：生成隨機數。
     rocrand_generate_uniform(gen, d_rand, n);
 
-    ∕∕ Use the generated random numbers.
+    ∕∕ 使用生成的隨機數。
 
     rocrand_destroy_generator(gen);
     hipFree(d_rand);
@@ -490,7 +490,7 @@ int main() {
     rocrand_set_seed(gen, time(NULL));
     rocrand_generate_uniform(gen, d_rand, n);
 
-    ∕∕ Use the generated random numbers.
+    ∕∕ 使用生成的隨機數
 
     rocrand_destroy_generator(gen);
     hipFree(d_rand);

@@ -28,7 +28,7 @@ Ubuntu 22.04.1 LTS & 5.15, OEM 5.17 \\ \hline
 \end{table}
 
 
-需要執行 GPU 程式的系統使用者必須加入適當的使用者群組。可以使用 groups 指令來檢查目前使用者所屬的群組。若要使用 GPU，使用者需加入 \lstinline|render| 或 \lstinline|video|（推薦）群組之一。可以使用指令 \lstinline|sudo usermod -a -G [group_name] [user_name]| 來將使用者加入特定的群組。
+需要執行 GPU 程式的系統使用者必須加入適當的使用者群組。可以使用 groups 指令來檢查目前使用者所屬的群組。若要使用 GPU，使用者需加入 \lstinline|render| 或 \lstinline|video|（推薦）群組之一。可以使用指令 \lstinline|sudo usermod -a -G [群組名稱] [使用者名稱]| 來將使用者加入特定的群組。
 
 在購買 GPU 硬體之前，應確認預計要購買的 GPU 是否被 ROCm 平台所之援（請參閱表格 \ref{table:rocm_supported_gpus}）。
 
@@ -52,12 +52,12 @@ Ubuntu 22.04.1 LTS & 5.15, OEM 5.17 \\ \hline
 
 \section{理解 ROCm 套件}
 
-ROCm 是一個包含許多軟體套件的複雜生態系統。完整的套件列表可以參見圖 \ref{fig:rocm_packages}。這些套件可能有複雜的依賴性關係。為了避免使用者需要逐一安裝套件，ROCm 將這些套件分組為元套件（完整列表請參見表格 \ref{table:rocm_meta_packages}）。使用者通常會選擇安裝元套件，而非單獨安裝各個套件。
+ROCm 是一個包含許多軟體套件的複雜生態系統。完整的套件列表可以參見圖 \ref{fig:rocm_packages}。這些套件可能有複雜的依賴性關係。為了避免使用者需要逐一安裝套件，ROCm 將這些套件分組為元套件 (meta-package)（完整列表請參見表格 \ref{table:rocm_meta_packages}）。使用者通常會選擇安裝元套件，而非獨立安裝各個套件。
 
 \begin{figure}
     \centering
-    \includegraphics[width=1\linewidth]{Appendici/FigureA1.png}
-    \caption{ROCm 元套件的列表以及包含在元套件中的各個單獨套件}
+    \includegraphics[width=1\linewidth]{Appendici/MetaPackages.png}
+    \caption{ROCm 元套件的列表以及包含在元套件中的各個獨立套件}
     \label{fig:rocm_packages}
 \end{figure}
 
@@ -76,7 +76,7 @@ wget https://repo.radeon.com/amdgpu-install/5.4.3/ubuntu/focal/amdgpu-install_5.
 sudo apt-get install ./amdgpu-install_5.4.50403-1_all.deb
 \end{lstlisting}
 
-上述指令應該會安裝一個可以幫助管理 ROCm 套件的 \lstinline|amdgpu-install| 程式。如要安裝 ROCm，我們可以使用 \lstinline|sudo ./amdgpu-install| 指令執行安裝。此外，使用者也可以透過像是 \lstinline|sudo amdgpu-install --usecase=rocm| 的指令來安裝特定的使用案例。如果使用者希望一次安裝多個使用案例，可以在 \lstinline|usecase| 參數中指定多個值，並以逗號分隔。例如，指令 \lstinline|sudo amdgpu-install --usecase=rocm,hiplibsdk| 會同時安裝 ROCm 和 \lstinline|hiplibsdk| 兩個使用案例。使用 \lstinline|sudo amdgpu-install --list-usecase| 可以顯示所有可用的使用案例列表。
+上述指令應該會安裝一個可以幫助管理 ROCm 套件的 \lstinline|amdgpu-install| 程式。如要安裝 ROCm，我們可以使用 \lstinline|sudo ./amdgpu-install| 指令執行安裝。此外，使用者也可以透過像是 \lstinline|sudo amdgpu-install --usecase=rocm| 的指令來安裝特定的使用案例。如果使用者希望一次安裝多個使用案例，可以在 \lstinline|usecase| 參數中指定多個值，並以逗號分隔。例如，指令 \lstinline|sudo amdgpu-install --usecase=rocm,hiplibsdk| 會同時安裝 ROCm 和 \lstinline|hiplibsdk| 兩個使用案例。使用 \lstinline|sudo amdgpu-install --list-usecase| 可以顯示所有可用的使用案例的列表。
 
 
 \subsection{套件管理器方法}
@@ -93,7 +93,7 @@ sudo apt-get install ./amdgpu-install_5.4.50403-1_all.deb
 
 
 \paragraph{步驟 2：安裝 AMD GPU 驅動程式}
-接下來，我們會使用套件管理器安裝 AMD GPU 驅動程式。套件管理器要求套件必須加密，因此需要安裝一組GNU Privacy Guard（GPG）金鑰。安裝 GPG 金鑰的指令為：
+接下來，我們會使用套件管理器安裝 AMD GPU 驅動程式。套件管理器要求套件必須加密，因此需要安裝一組 GNU Privacy Guard（GPG）金鑰。安裝 GPG 金鑰的指令為：
 
 \lstinline!curl -fsSL https://repo.radeon.com/rocm/rocm.gpg.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/rocm-keyring.gpg!。
 
@@ -123,7 +123,7 @@ sudo apt-get install ./amdgpu-install_5.4.50403-1_all.deb
 首先，我們可以檢查 \lstinline|/opt/rocm|目錄是否包含預期的執行檔，例如 \lstinline|rocm-smi|，以及 ROCm 函式庫，例如 \lstinline|librocblas.so|。
 其次，我們可以檢查驅動程式是否正常運作。可以使用 \lstinline|dkms status| 指令檢查目前正在使用的驅動程式。例如，在作者的系統中，執行此指令會顯示輸出：\lstinline|amdgpu, 5.16.9.22.20-1438746~20.04, 5.4.0-121-generic, x86_64: installed|。這表示驅動程式已正確安裝並正在使用。
 
-再者，我們應該檢查是否有程式能夠偵測到 GPU 硬體並取得 GPU 的屬性。我們可以執行 \lstinline|/opt/rocm/bin/rocminfo| 或 \lstinline|/opt/rocm/opencl/bin/clinfo| 來取得硬體屬性。如果這兩個程式能夠順利執行並且顯示系統中安裝的 GPU，則表示 ROCm 環境已正確安裝並且正常運作。
+再來，我們應該檢查是否有程式能夠偵測到 GPU 硬體並取得 GPU 的屬性。我們可以執行 \lstinline|/opt/rocm/bin/rocminfo| 或 \lstinline|/opt/rocm/opencl/bin/clinfo| 來取得硬體屬性。如果這兩個程式能夠順利執行並且顯示系統中安裝的 GPU，則表示 ROCm 環境已正確安裝並且正常運作。
 
 最後，我們可以使用平常的 Ubuntu 套件安裝指令來安裝元套件。指令為 \lstinline|sudo apt install <套件名稱>|。例如，如果我們想安裝最常使用的 ROCm 功能，可以使用 \lstinline|sudo apt install rocm|。
 
@@ -145,7 +145,7 @@ sudo apt-get install ./amdgpu-install_5.4.50403-1_all.deb
 
 \lstinline!echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' | sudo tee /etc/apt/preferences.d/rocm-pin-600!
 
-接著，我們可以使用套件管理器更新 ROCm 套件，指令為：\lstinline|sudo apt install --only-upgrade <元套件名稱>|。
+接著，我們可以使用套件管理器更新 ROCm 套件，指令為：\lstinline|sudo apt install --only-upgrade <套件名稱>|。
 
 \section{解除安裝 ROCm}
 若要解除安裝 ROCm，我們可以選擇使用安裝程式腳本（在這種情況下是解除安裝程式）或是 Linux 發行版的套件管理器。如果 ROCm 是透過安裝程式腳本安裝的，解除安裝程式會與安裝程式一併提供。解除安裝 ROCm 只需執行 \lstinline|sudo amdgpu-uninstall| 即可。

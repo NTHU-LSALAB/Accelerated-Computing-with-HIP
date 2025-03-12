@@ -1,4 +1,4 @@
-\chapter{HIP kernel 程式設計 - 謝之豫}
+\chapter{HIP kernel 程式設計}
 \section{在HIP kernel中呼叫函數}
 在本節中，我們探討 HIP 中的函數類型修飾符 (\term{function-type qualifiers})，一個在 GPU 程式設計中的重要概念，讓我們能指定函數的類型。函數類型修飾符告知編譯器某個函數應該在 CPU、GPU 或兩者上執行，從而讓我們充分利用異構計算 (\term{heterogeneous computing})的潛力。
 
@@ -57,7 +57,7 @@ __host__ int add_numbers(int a, int b) {
 \end{lstlisting}
 
 \begin{lstlisting}[language=C, caption={在HIP kernel中使用預設函數}, label={4th:example}]
-__host__ int add_numbers(int a, int b) {
+int add_numbers(int a, int b) {
     return a + b;
 }
 \end{lstlisting}
@@ -76,7 +76,7 @@ __device__ __host__ void myfunction(int *a) {
 
 \section{在HIP kernel中使用模板}
 
-在前一節中，我們觀察到函數在減少重複程式碼的重要作用，尤其是device函數。然而，在某些情況下，某些函數仍可能包含重複的程式碼。例如，實作一個比較兩個整數並返回較大值的函數十分簡單。但如果我們需要比較兩個單精度浮點數並返回較大值，就需要針對輸入和輸出類型的細微差異重複撰寫程式碼。為了解決這個問題，關鍵在於模板 (template)。模板為 HIP 程式設計提供了一種強大機制，使我們能夠撰寫能處理各種資料型別的通用函數，從而避免事先指定資料型別的需求。模板的概念來自 C++ 語言 \cite{67}，它帶來了靈活性並提升了程式碼的再利用性。
+在前一節中，我們觀察到函數在減少重複程式碼的重要作用，尤其是device函數。然而，在某些情況下，某些函數仍可能包含重複的程式碼。例如，實作一個比較兩個整數並返回較大值的函數十分簡單。但如果我們需要比較兩個單精度浮點數並返回較大值，就需要針對輸入和輸出類型的細微差異重複撰寫程式碼。為了解決這個問題，關鍵在於模板 (template)。模板為 HIP 程式設計提供了一種強大機制，使我們能夠撰寫能處理各種資料型別的通用函數，從而避免事先指定資料型別的需求。模板的概念來自 C++ 語言 \cite{stroustrup2013cpp}，它帶來了靈活性並提升了程式碼的再利用性。
 
 在 HIP 中實作模板，需要在程式碼前加上關鍵字 \term{template}，後面接角括號，如 Listing 3.6 所示。透過在角括號中定義數據型別作為參數，我們可以輕鬆調整程式碼以處理不同的資料型別，無需重複撰寫或修改程式碼。
 
@@ -98,7 +98,7 @@ __global__ void vector_add(T *out, T *a, T *b, int n){
 
 在 C 和 C++ 中，一個主要的特性是能夠使用struct 建立自定義資料型別。struct 能夠將多個值及多種型別組合在一起，以描述單一實體的屬性，從而更容易管理相關資料。本節將探討 HIP 中 struct 的基本概念，包括其語法，並提供其使用情境。此外，我們還將提供分步驟程式範例以強化這些概念。
 
-在 HIP 程式設計中，struct 的用法與 C \cite{41}或 C++ \cite{67}中的用法相似。struct 是一種複合資料型別，能將不同型別的值組合成一個單位，從而更輕鬆地管理和操作相關資料。這在需要處理大量互相關聯的資料時尤其有用，因為它可以以結構化的方式組織資料。透過使用 struct，我們可以將資料封裝為一個一致的單元，簡化程式內的資料傳遞，並降低錯誤或不一致的可能性。在 HIP 中使用 struct 的一個典型範例是處理複雜資料結構，像是描述二維空間中的點。舉例來說，假設需要儲存一組二維點的資訊。與其分別用不同的陣列來儲存每個點的 \term{x} 和 \term{y} 座標，不如使用 struct 來表示一個二維空間中的點。struct 中會包含兩個欄位：一個用於 \term{x} 座標，另一個用於 \term{y} 座標。透過 struct，我們可以將這些資料組織成一個物件，從而更方便地進行資料管理與操作。Listing 3.7 中的程式碼片段定義了一個用於表示二維空間中的點的 struct。在 HIP 中定義 struct 後，我們可以宣告該型別的變數並用資料進行初始化。在此範例中，我們宣告了一個型別為 \term{Point}的變數\term{p1}。透過點記號（\term{p1.x} 和 \term{p1.y}）我們可以訪問 \term{p1} 變數的 \term{x} 和 \term{y} 欄位，並分別為其賦值以表示 \term{x} 和 \term{y} 座標。例如，\term{p1.x= 1.0f} 創造了一個x座標為1.0的點，而\term{p1.y= 2.0f} 則將該點的y座標定為2.0。
+在 HIP 程式設計中，struct 的用法與 C \cite{kernighan1988c}或 C++ \cite{stroustrup2013cpp}中的用法相似。struct 是一種複合資料型別，能將不同型別的值組合成一個單位，從而更輕鬆地管理和操作相關資料。這在需要處理大量互相關聯的資料時尤其有用，因為它可以以結構化的方式組織資料。透過使用 struct，我們可以將資料封裝為一個一致的單元，簡化程式內的資料傳遞，並降低錯誤或不一致的可能性。在 HIP 中使用 struct 的一個典型範例是處理複雜資料結構，像是描述二維空間中的點。舉例來說，假設需要儲存一組二維點的資訊。與其分別用不同的陣列來儲存每個點的 \term{x} 和 \term{y} 座標，不如使用 struct 來表示一個二維空間中的點。struct 中會包含兩個欄位：一個用於 \term{x} 座標，另一個用於 \term{y} 座標。透過 struct，我們可以將這些資料組織成一個物件，從而更方便地進行資料管理與操作。Listing 3.7 中的程式碼片段定義了一個用於表示二維空間中的點的 struct。在 HIP 中定義 struct 後，我們可以宣告該型別的變數並用資料進行初始化。在此範例中，我們宣告了一個型別為 \term{Point}的變數\term{p1}。透過點記號（\term{p1.x} 和 \term{p1.y}）我們可以訪問 \term{p1} 變數的 \term{x} 和 \term{y} 欄位，並分別為其賦值以表示 \term{x} 和 \term{y} 座標。例如，\term{p1.x= 1.0f} 創造了一個x座標為1.0的點，而\term{p1.y= 2.0f} 則將該點的y座標定為2.0。
 
 \begin{lstlisting}[language=C, caption={在HIP kernel中使用結構}, label={7th:example}]
 struct Point {
@@ -143,7 +143,8 @@ __global__ void calculateDistToOrigin(TwodimensionPoint *points, int n) {
 }
 \end{lstlisting}
 
-在 Listing 3.11 的 CPU 程式碼中，我們宣告了一個指標 \code{h\_points}，它指向一個包含 \code{N} 個 \code{TwoDimensionPoint} 物件的陣列。為了在 CPU 上為host分配記憶體，我們使用 \code{malloc} 函數，請求分配大小為\code{sizeof(TwoDimensionPoint) * N}的記憶體。注意我們在 CPU 和 GPU 程式碼中都使用了該結構。接著在後續的 \code{for} 迴圈中，我們迭代 \code{N} 次，初始化陣列中每個 \code{TwoDimensionPoint} 物件的 \code{x} 和 \code{y} 值。我們使用 \code{rand()} 函數生成介於 0 和 \code{RAND\_MAX} 返回的最大值之間的隨機數。生成的隨機數除以 \code{RAND\_MAX} 以取得浮點值，然後將其分別儲存到 \code{TwoDimensionPoint} 物件的 \code{x} 和 \code{y} 欄位中。
+在 Listing 3.11 的 CPU 程式碼中，我們宣告了一個指標 \code{h\_points}，它指向一個包含 \code{N} 個 \code{TwoDimensionPoint} 物件的陣列。為了在 CPU 上為host分配記憶體，我們使用 \code{malloc} 函數，請求分配大小為
+\code{sizeof(TwoDimensionPoint) * N} 的記憶體。注意我們在 CPU 和 GPU 程式碼中都使用了該結構。接著在後續的 \code{for} 迴圈中，我們迭代 \code{N} 次，初始化陣列中每個 \code{TwoDimensionPoint} 物件的 \code{x} 和 \code{y} 值。我們使用 \code{rand()} 函數生成介於 0 和 \code{RAND\_MAX} 返回的最大值之間的隨機數。生成的隨機數除以 \code{RAND\_MAX} 以取得浮點值，然後將其分別儲存到 \code{TwoDimensionPoint} 物件的 \code{x} 和 \code{y} 欄位中。
 
 \begin{lstlisting}[language=C, caption={CPU記憶體的配置}, label={11th:example}]
 int main() {
@@ -178,7 +179,7 @@ calculateDistToOrigin<<<gridSize, blockSize>>>(pointArray, N);
 hipDeviceSynchronize();
 \end{lstlisting}
 
-待 kernel 執行完畢後，我們需要將結果從 GPU 記憶體複製回host記憶體。Listing 3.15 的程式碼片段說明了這一過程。此處，我們再次使用 \code{hipMemcpy}，但這次使用 \code{hipMemcpyDeviceToHost} 標誌，將結果從 GPU 記憶體（\code{points}）複製回host記憶體（\code{h_points}）。需要複製的資料大小依然是 \code{sizeof(TwoDimensionPoint) * N}。最後的步驟是將所有點到原點的距離輸出。在輸出時，我們遍歷 \code{h\_points} 陣列，並列印出每個點的索引值、\code{x} 和 \code{y} 座標，以及計算出的 \code{distToOrigin} 值。
+待 kernel 執行完畢後，我們需要將結果從 GPU 記憶體複製回 host 記憶體。Listing 3.15 的程式碼片段說明了這一過程。此處，我們再次使用 \code{hipMemcpy}，但這次使用 \code{hipMemcpyDeviceToHost} 標誌，將結果從 GPU 記憶體（\code{points}）複製回host記憶體（\code{h\_points}）。需要複製的資料大小依然是 \code{sizeof(TwoDimensionPoint) * N}。最後的步驟是將所有點到原點的距離輸出。在輸出時，我們遍歷 \code{h\_points} 陣列，並列印出每個點的索引值、\code{x} 和 \code{y} 座標，以及計算出的 \code{distToOrigin} 值。
 
 \begin{lstlisting}[language=C, caption={從GPU到CPU的記憶體複製}, label={15th:example}]
 hipMemcpy(h_points, pointArray, sizeof(TwoDimensionPoint) * N, hipMemcpyDeviceToHost);
@@ -214,5 +215,3 @@ Point 9: (0.141603, 0.606969), distToOrigin = 0.623268
 \section{結語}
 
 在本章中，我們探討了一些可以使 GPU 程式設計更加簡潔且具備再利用性的進階技術。我們首先討論了 HIP 中的函數型別修飾符，這對於充分利用 GPU 的平行計算能力並優化應用程式的效能至關重要。我們還介紹了 HIP kernel中的template，這一機制受到 C++ template的啟發，消除了針對類似資料型別重複編寫程式碼的需求。此外，我們還展示了如何在 GPU 核心程式中使用struct，struct允許將相關的資料實體綁定在一起。通過將資料封裝到struct中，我們可以增強程式碼的組織性並簡化複雜的計算。這些方法可以有效提升 HIP 程式在可讀性、再利用性和可管理性方面的表現。
-
-\bibliography{FileAusiliari/Bibliografia}

@@ -1,4 +1,4 @@
-\chapter{HIP Runtime API - 謝之豫} \label{chap:HIP_runtime_API}
+\chapter{HIP Runtime API} \label{chap:HIP_runtime_API}
 
 在本書的前三章中，我們了解到 HIP 程式由在 CPU 上運行的host部分和在 GPU 上執行的device部分組成。上一章探討了如何設計 GPU kernel程式的方法。本章將介紹如何利用 HIP Runtime API 來增強host程式對 GPU 的控制能力。
 
@@ -32,7 +32,7 @@ HIP_ASSERT(hipHostMalloc(&CPUArrayC, bytes));
 HIP_ASSERT(hipHostMalloc(&CPUVerifyArrayC, bytes));
 \end{lstlisting}
 
-透過使用 hipHostMalloc() 函數，我們可以使用pinned memory來分配host記憶體。這確保記憶體被分配在實體記憶體中，並消除了 CPU 和 GPU 之間頻繁的資料傳輸需求，從而提升性能。此外，我們必須在記憶體釋放部分進行更改。與 Listing 2.6 所示的傳統主機記憶體釋放方法不同，我們將使用 hipHostFree() 函數，如 Listing 4.4 所述。然而，設備記憶體的釋放方法將保持不變。
+透過使用 hipHostMalloc() 函數，我們可以使用pinned memory來分配host記憶體。這確保記憶體被分配在實體記憶體中，並消除了 CPU 和 GPU 之間頻繁的資料傳輸需求，從而提升性能。此外，我們必須在記憶體釋放部分進行更改。與 Listing 2.6 所示的傳統 host記憶體釋放方法不同，我們將使用 hipHostFree() 函數，如 Listing 4.4 所述。然而， device記憶體的釋放方法將保持不變。
 
 \begin{lstlisting}[language=C, caption={釋放hostpinned memory}, label={4th:example}]
 // 釋放host記憶體
@@ -125,7 +125,7 @@ hipStreamDestroy(&myStream);
 在使用多個streams 時，開發者可能希望暫停host端的處理，直到特定stream中的 kernel 完成執行。對於host CPU 而言，這種序列化是必要的，特別是在 CPU 需要該stream的輸出以進行host端處理時。為了支援這種序列化，HIP 提供了 \term{hipStreamSynchronize} API，該 API 接受我們希望同步的stream物件作為參數。如果開發者不想阻塞host CPU，但希望同步多個streams，可以使用 \term{hipStreamWaitEvent} API（將在 4.3 節中介紹）。
 
 \bold{非同步的記憶體複製}
-要充分發揮streams的潛力需要了解非同步記憶體複製的工作原理。截至目前，我們已使用 \term{hipMemcpy} API 在主機 CPU 和 GPU 之間傳輸資料。這是一種阻塞式呼叫，程式控制在資料傳輸完成之前不會返回主機。相反地，\term{hipMemcpyAsync} 是非阻塞的。該 API 執行的任務與 \term{hipMemcpy} 類似，除了 \term{hipMemcpyAsync} 會要求程式開發者指定stream的識別符作為參數。該 API 的非阻塞特性帶來了另一個重要的意涵：要使用非同步記憶體複製，程式開發者必須確保要移動的資料是被固定於host記憶體中的「pinned memory」（參見 4.1 節）。
+要充分發揮streams的潛力需要了解非同步記憶體複製的工作原理。截至目前，我們已使用 \term{hipMemcpy} API 在 host CPU 和 GPU 之間傳輸資料。這是一種阻塞式呼叫，程式控制在資料傳輸完成之前不會返回 host。相反地，\term{hipMemcpyAsync} 是非阻塞的。該 API 執行的任務與 \term{hipMemcpy} 類似，除了 \term{hipMemcpyAsync} 會要求程式開發者指定stream的識別符作為參數。該 API 的非阻塞特性帶來了另一個重要的意涵：要使用非同步記憶體複製，程式開發者必須確保要移動的資料是被固定於host記憶體中的「pinned memory」（參見 4.1 節）。
 
 \subsection{預設與非預設stream}
 在使用 stream 時，必須了解使用預設stream與非預設stream的影響。需要注意的是，所有新建立的stream本身都是阻塞的。在談論stream時，「阻塞」意味著任何提交到預設stream的操作都必須等待非預設stream中先前的所有操作完成後才能執行。同樣地，所有在非預設stream中排隊的操作，如果是在預設stream的操作之後提交，也將被阻塞，直到預設stream中的工作完成。
@@ -182,7 +182,7 @@ __global__ void cube(double *a, double *b){
 \subsection{重疊計算與溝通}
 若我們可以利用streams的並行執行特性重疊計算與通信，我們便能縮短程式執行時間。藉由將計算任務和資料傳輸分配到不同的stream中，可以隱藏資料傳輸的延遲，因為跨stream的操作不會互相阻塞。這種技術對於大型問題和高資料傳輸需求特別有用，允許在 kernel 啟動之前進行資料的預傳輸。
 
-一種常見的模式是將資料集劃分為多個子集並以流水線方式執行。stream透過允許每個stream處理資料的子集來促成這種模式。利用這種模式，可以加速 kernel 啟動並實現並行資料傳輸。透過優化計算和通信任務的管理，結果可以顯著提升效能。
+一種常見的模式是將資料集劃分為多個子集並以流水線方式執行。stream透過允許每個stream處理資料的子集來促成這種模式。利用這種模式，可以加速 kernel 啟動並實現並行資料傳輸。透過優化計算和通信任務的管理，可以顯著提升效能。
 
 讓我們重新審視 Listing 4.10 範例中的 cube kernel。首先，我們透過劃分資料集來減少問題規模。雖然在範例中選擇了四個stream，但我們鼓勵讀者嘗試其他分割設定。在範例中，我們將 1 億個輸入資料分割給四個stream，每個stream處理 2500 萬個資料。
 
@@ -199,12 +199,12 @@ for(int i = 0; i < num_streams; i++){
 }
 \end{lstlisting}
 
-在\term{compute\_comm\_overlap.cpp} 中的程式碼展示了一種情況 -- 數據被劃分到四個流中，並通過 FOR 迴圈啟動，如 Listing 4.11 所示。在 MI100 系統上，這種重疊計算與通信的stream的實現相比只使用預設stream的實現，達到了 4 倍的加速。因此，根據具體問題，程式設計者可以將大型問題分解為較小的stream，並重疊計算與通信，以獲得更高的性能。這種典型範例在許多機器學習框架中也很流行，例如 PyTorch \cite{62} 和 TensorFlow \cite{1}，因為它們常用流水線技術來實現神經網路的訓練與推理。
+在\term{compute\_comm\_overlap.cpp} 中的程式碼展示了一種情況 -- 數據被劃分到四個流中，並通過 FOR 迴圈啟動，如 Listing 4.11 所示。在 MI100 系統上，這種重疊計算與通信的stream的實現相比只使用預設stream的實現，達到了 4 倍的加速。因此，根據具體問題，程式設計者可以將大型問題分解為較小的stream，並重疊計算與通信，以獲得更高的性能。這種典型範例在許多機器學習框架中也很流行，例如 PyTorch \cite{paszke2019pytorch} 和 TensorFlow \cite{abadi2016tensorflow}，因為它們常用流水線技術來實現神經網路的訓練與推理。
 
 \section{HIP events (事件)}
 我們可以通過在host程式碼中使用計時器或時鐘來檢查執行時間的測量過程。雖然這些方法可以提供基本的執行時間概念，但在測量 GPU 操作時，可能無法達到所需的準確性和可靠性。在本節中，我們將探討更高級的方法 -- HIP 事件，這是一種精確且可靠的測量 GPU 操作執行時間的方法。利用 HIP 事件，程式設計者可以有效識別性能瓶頸並優化程式碼以提高效率。
 
-HIP 事件是監控 GPU 指令執行的強大工具。它們提供了精細的控制與執行時間的準確測量，使其成為性能分析中的重要元件。此外，我們將研究如何創建和使用 HIP 事件來準確測量向量加法操作，一個 GPU 程式設計中的基本任務，的執行時間。HIP 事件在 HIP 程式設計模型中扮演至關重要的角色，為追踪 GPU 上執行的操作的狀態和進度提供了一種強大的機制。藉由\term{ hipEvent\_t} 類型，程式設計者可以獲得一組多功能的工具，用於有效監控任務的執行。\term{ hipEvent\_t} 類型是 HIP 程式設計中表示事件的基石，如 Listing 4.12 所示。通過使用該類型，程式設計者可以創建、記錄和同步事件，以精確控制 GPU 任務的執行流程。這種控制級別使得高效監控和分析 GPU 操作變得可能，從而幫助開發者優化程式碼並辨識性能瓶頸。
+HIP 事件是監控 GPU 指令執行的強大工具。它們提供了精細的控制與執行時間的準確測量，使其成為性能分析中的重要元件。此外，我們將研究如何創建和使用 HIP 事件來準確測量向量加法操作，一個 GPU 程式設計中的基本任務的執行時間。HIP 事件在 HIP 程式設計模型中扮演至關重要的角色，為追踪 GPU 上執行的操作的狀態和進度提供了一種強大的機制。藉由\term{ hipEvent\_t} 類型，程式設計者可以獲得一組多功能的工具，用於有效監控任務的執行。\term{ hipEvent\_t} 類型是 HIP 程式設計中表示事件的基石，如 Listing 4.12 所示。通過使用該類型，程式設計者可以創建、記錄和同步事件，以精確控制 GPU 任務的執行流程。這種控制級別使得高效監控和分析 GPU 操作變得可能，從而幫助開發者優化程式碼並辨識性能瓶頸。
 
 \begin{lstlisting}[language=C, caption={使用hipEvent\_t 型別}, label={12th:example}]
 hipEvent_t
@@ -248,7 +248,7 @@ hipEventDestroy(hipEvent_t event)
 \end{lstlisting}
 
 \subsection{使用特定標誌創建HIP 事件}
-函數 \term{hipEventCreateWithFlags()} 用於使用指定的標誌創建事件，並在device上為其分配記憶體，如 Listing 4.18 所示。此函數接受兩個參數：一個指向 \term{hipEvent\_t} 變數的指標，用於存儲創建的事件的把手 (handle)；以及一個無符號整數，用於表示標誌。這些標誌可用於自定義事件的行為，例如指示事件應記錄於特定的stream中，或指定事件的完成類型。
+函數 \term{hipEventCreateWithFlags()} 用於搭配指定的標誌創建事件，並在device上為其分配記憶體，如 Listing 4.18 所示。此函數接受兩個參數：一個指向 \term{hipEvent\_t} 變數的指標，用於存儲創建的事件的把手 (handle)；以及一個無符號整數，用於表示標誌。這些標誌可用於自定義事件的行為，例如指示事件應記錄於特定的stream中，或指定事件的完成類型。
 
 \begin{lstlisting}[language=C, caption={使用 hipEventCreateWithFlags()
 創建帶有標誌的事件}, label={18th:example}]
@@ -264,7 +264,7 @@ hipDeviceSynchronize()
 \end{lstlisting}
 
 \subsection{使用HIP 事件的向量加法}
-為了在實際案例中探索 hip 事件的使用，我們將重新審視向量加法範例。在第 2 章中的向量加法示例中，我們可以加入 hip 事件來測量 GPU 上的經過時間。首先，在 Listing 2.6 中的記憶體分配後，我們需要引入一個變數來存儲 GPU 經過的時間。接下來，使用 \term{hipEventCreate()} 函數創建兩個類型為 \term{hipEvent\_}t 的 HIP 事件，分別命名為 start 和 stop，如 Listing 4.20 所示。這些事件用於測量 GPU 計算期間的時間。通過創建這些事件，我們準備好測量 GPU 上的經過時間。然後，我們進行從 CPU 到 GPU 的記憶體複製，這與一般的向量加法示例相似。
+為了在實際案例中探索 hip 事件的使用，我們將重新審視向量加法範例。在第 2 章中的向量加法示例中，我們可以加入 hip 事件來測量 GPU 上的經過時間。首先，在 Listing 2.6 中的記憶體分配後，我們需要引入一個變數來存儲 GPU 經過的時間。接下來，使用 \term{hipEventCreate()} 函數創建兩個類型為 \term{hipEvent\_t} 的 HIP 事件，分別命名為 start 和 stop，如 Listing 4.20 所示。這些事件用於測量 GPU 計算期間的時間。通過創建這些事件，我們準備好測量 GPU 上的經過時間。然後，我們進行從 CPU 到 GPU 的記憶體複製，這與一般的向量加法示例相似。
 
 \begin{lstlisting}[language=C, caption={GPU的記憶體配置與CPU到GPU的記憶體複製}, label={20th:example}]
 // 此處宣告所有的GPU陣列
@@ -285,7 +285,7 @@ HIP_ASSERT(hipMemcpy(GPUArrayB, CPUArrayB, bytes, hipMemcpyHostToDevice));
 
 在記憶體複製完成、也在 Listing 2.4 中設置了kernel 啟動的block大小和grid大小後，我們可以開始使用 \term{hipEventRecord()} 函數來記錄 hip 事件。在這種情況下，我們將 start 變量作為參數傳遞，因為 \term{hipEventRecord()} 函數需要欲記錄的事件，如 Listing 4.21 所示。在使用 \term{hipEventRecord()} 啟動記錄後，我們啟動 kernel 以執行向量加法。一旦 kernel 執行完成，我們使用 stop 變量在 \term{hipEventRecord()} 函數中做停止記錄。為了確保同步和記錄事件的完成，我們使用 \term{hipEventSynchronize()} 函數與 stop 參數。同步完成後，我們通過將 GPU 記憶體複製回 CPU 記憶體來完成 kernel 執行。隨後，我們可以使用 \term{hipEventElapsedTime()} 函數來計算並印出 GPU 的經過時間，如 Listing 4.21 所示。最後，我們使用 free 和 hipFree 函數分別釋放host和device的記憶體。
 
-\begin{lstlisting}[language=C, caption={組織thread與啟動kernel}, label={21st:example}]
+\begin{lstlisting}[language=C, caption={組織 thread 與啟動 kernel}, label={21st:example}]
 // 每個thread block中thread的數量
 blockSize = 1024;
 // grid中thread block的數量
@@ -309,6 +309,6 @@ printf("Time elapsed on vector addition on GPU: %f ms.\n\n", gpu_elapsed_time_ms
 通過結合 hip 事件，我們可以準確地測量向量加法範例中的 GPU 經過時間。通過記錄開始和停止事件、啟動 kernel 並同步這些事件，我們確保精確地測量 GPU 執行時間。利用 hipEventElapsedTime，我們可以計算並顯示這段時間。此外，適當的記憶體釋放確保了系統資源的高效利用。
 
 \section{結語}
-在本章中，我們介紹了 HIP 運行時 API 提供的更多進階功能。我們從討論 HIP 記憶體管理方法開始，因為記憶體分配的適應能力在 GPU 操作中尤其重要。在這個背景下，高效的記憶體傳輸和訪問是關鍵因素。接著，我們學習了 HIP stream的概念，一個能夠提升性能的強大工具。它們使得計算和通信可以同時進行，從而提高 GPU 和網路的利用率。在應用程式中根據 API 提供的方式使用 HIP stream，既簡單又能顯著提升應用效率。最後，我們還討論了 HIP 事件，它在 GPU 同步和性能測量中扮演著至關重要的角色。它們提供了一種強而有力的方法來追蹤和監控在 GPU 上執行的操作。了解這些 HIP API 可以讓程式設計者以更加靈活且細緻的方式更好地控制 GPU。
+在本章中，我們介紹了 HIP 運行時 API 提供的更多進階功能。我們從討論 HIP 記憶體管理方法開始，因為適當的記憶體分配在 GPU 操作中尤其重要。在這個背景下，高效的記憶體傳輸和訪問是關鍵因素。接著，我們學習了 HIP stream的概念，一個能夠提升性能的強大工具。它們使得計算和通信可以同時進行，從而提高 GPU 和網路的利用率。在應用程式中根據 API 提供的方式使用 HIP stream ，既簡單又能顯著提升應用效率。最後，我們還討論了 HIP 事件，它在 GPU 同步和性能測量中扮演著至關重要的角色。它們提供了一種強而有力的方法來追蹤和監控在 GPU 上執行的操作。了解這些 HIP API 可以讓程式設計者以更加靈活且細緻的方式更好地控制 GPU。
 
-\bibliography{FileAusiliari/Bibliografia}
+% \bibliography{FileAusiliari/Bibliografia}

@@ -1,4 +1,4 @@
-\chapter{\term{ROCm} in Dat Centers - 林展毅}
+\chapter{\term{ROCm} in Dat Centers}
 
 \term{ROCm} 在資料中心和HPC雲端環境中提供無縫支援，使大量節點可以在多個用戶之間共享。\term{ROCm} 為多個平台提供虛擬容器支援，包括Docker、Singularity和Kubernetes。這些平台允許使用者在AMD GPU平台上部署具有 \term{ROCm} 支援的微容器。\term{ROCm} 也提供與雲端環境中的作業排程器的簡易整合，使用諸如簡單Linux資源管理工具(\term{SLURM})和負載共享設施(\term{LSF})等管理框架。在本章中，我們將探討其中一些功能，包括容器和作業排程器在 \term{ROCm} 系統上的應用。
 
@@ -34,7 +34,7 @@
 
 這個例子展示了在 \term{ROCm} 支援的GPU上使用Kubernetes框架部署容器是多麼容易。我們鼓勵讀者通過更改yaml檔案的參數並嘗試自己預構建的容器來進行實驗。
 
-\begin{lstlisting}[numbers=none, caption={在Kubernetes平台上執行AlexNet基準測試的配置文件}, captionpos=t, label={lst:config_file+exe_alexnetink8s}]
+\begin{lstlisting}[language=yaml, caption={在Kubernetes平台上執行AlexNet基準測試的配置文件}, captionpos=t, label={lst:config_file+exe_alexnetink8s}]
 apiVersion: v1
 kind: Pod
 metadata:
@@ -80,7 +80,7 @@ spec:
 
 在 \term{SLURM} 的批次提交模式中，程式設計師準備一個類似於 \term{matmul.bash} 的腳本，如 \lstref{lst:slurm_job_example} 所示。在此，我們指定集群分區、GPU數量、記憶體量和執行時間。除了這些細節之外，我們需要指定腳本應該載入 \term{ROCm} 模組，以便正確設定環境來使用所有與 \term{ROCm} 相關的函式庫。我們在第18行包含編譯命令。在此範例中，我們編譯 \term{matmul.cpp}，它會產生 \term{matmul} 二進位檔。最後，在第20行，我們指定應該執行 \term{matmul} 的腳本。要請求 \term{SLURM} 調度和執行我們的作業，我們只需使用 \bold{sbatch} 命令並傳入檔案名稱。在這個案例中，\bold{sbatch matmul.bash} 將作業提交給 \term{SLURM} 調度器。如果程式輸出到 \term{stdout}，結果會儲存在 \term{gpu.out} 檔案中（\term{matmul.bash} 的第4行）。
 
-\begin{lstlisting}[numbers=none, caption={matmul.bash \term{SLURM} 批次提交腳本。}, captionpos=t, label={lst:slurm_job_example}]
+\begin{lstlisting}[language=bash, caption={matmul.bash \term{SLURM} 批次提交腳本。}, captionpos=t, label={lst:slurm_job_example}]
 #!/bin/bash
 
 #SBATCH --job-name=matmulgpu   # job name

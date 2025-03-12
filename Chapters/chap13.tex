@@ -1,4 +1,4 @@
-\chapter{第三方工具 - 白宸安}
+\chapter{第三方工具}
 \label{chap:Third-Party Tools}
 
 為了支援 HIP/ROCm 開發，目前已有許多第三方工具。本章簡要介紹了其中一些工具，並提供了在何處可以找到更多資訊的指示。
@@ -67,13 +67,13 @@ PAPI ROCm 元件介接 AMD 的 ROCm 分析庫（即 rocProfiler），並支援�
     \item \texttt{GDS}：全局數據存儲（GDS）相關事件。
     \item \texttt{TCP/TA}：L1 快取相關計數。
     \item \texttt{TCC}：L2 快取相關計數。
-    \item \texttt{SQ}：指令調度器（Sequencer），包括指令的抓取、解碼與排程。
-    \item \texttt{FLAT}：包括 Video、Sys、LDS 和 Scratch 的記憶體指令，使用平坦位址空間，速度較慢。
+    \item \texttt{SQ}：指令調度器（Sequencer），包括指令的擷取、解碼與排程。
+    \item \texttt{FLAT}：包括 Video、Sys、LDS 和 Scratch 的記憶體指令，使用flat address space，速度較慢。
     \item \texttt{VMEM}：向量記憶體儲存相關事件。
     \item \texttt{VMem}：影像記憶體相關事件。
     \item \texttt{SMEM}：純量記憶體儲存相關事件。
-    \item \texttt{SFetch}：純量提取事件。    
-    \item \texttt{VFetch}：向量提取事件（不包括 FLAT 指令）。
+    \item \texttt{SFetch}：純量fetch事件。    
+    \item \texttt{VFetch}：向量fetch事件（不包括 FLAT 指令）。
     \item \texttt{VALU}：向量運算單元（Vector ALU）相關事件。
     \item \texttt{SALU}：純量運算單元（Scalar ALU）相關事件（不包括浮點計數）。
 \end{itemize}
@@ -85,7 +85,7 @@ PAPI ROCm 元件介接 AMD 的 ROCm 分析庫（即 rocProfiler），並支援�
     \label{fig:PAPI5}
 \end{figure}
 
-在圖 13.6 中，展示了在執行 rocBLAS GEMM 核心期間，使用 PAPI\_read() 每 5 毫秒收集的 AMD MI100 GPU L2 快取命中數據。
+在圖 13.6 中，展示了在執行 rocBLAS GEMM kernel期間，使用 PAPI\_read() 每 5 毫秒收集的 AMD MI100 GPU L2 快取命中數據。
 
 \subsubsection{PAPI rocm\_smi 元件}
 
@@ -97,7 +97,7 @@ PAPI rocm\_smi 元件與 AMD SMI 介接，新增了對電源管理的支援，�
     \item \texttt{Fan}：以每分鐘轉速（RPM）顯示風扇速度、最大速度，以及讀寫速度。
     \item \texttt{Memory}：包括總 VRAM、可見 VRAM，以及圖形轉換表（GTT）VRAM。
     \item \texttt{PCI}：監控傳輸吞吐量、接收量以及最大封包大小。
-    \item \texttt{Busy percent}：設備忙於處理的時間百分比。
+    \item \texttt{Busy percent}：device忙於處理的時間百分比。
 \end{itemize}
 
 在圖 13.7 的例子中，展示了在運行 hipBLAS GEMM 核心期間，PAPI\_read() 收集的 AMD MI60 GPU 精細化功耗數據樣本。
@@ -111,10 +111,10 @@ PAPI rocm\_smi 元件與 AMD SMI 介接，新增了對電源管理的支援，�
     \label{fig:PAPI6}
 \end{figure}
 
-PAPI 除了允許存取低階硬體計數器外，還提供了一組較高階的事件，這些事件在抽象微架構細節的同時，保持跨供應商與硬體世代一致的名稱。例如，PAPI\_L2\_DCR 就是一個預設事件。該事件計數器被配置為計算 L2 快取的讀取請求數。
+PAPI 除了允許存取低階硬體計數器外，還提供了一組較高階的事件，這些事件在抽象微架構細節的同時，保持跨供應商與硬體世代一致的名稱。例如，PAPI\_L2\_DCR 就是一個預設事件。該事件計數器被配置為統計 L2 快取的讀取請求數。
 
 預設事件的重要性有兩方面：
-首先，使用可攜帶且直觀的事件名稱更為方便。
+首先，使用可移植且直觀的事件名稱更為方便。
 接著，它們設計為更容易映射到性能概念，便於理解和應用。
 為了幫助程式設計師選擇原生事件或其組合來定義預設事件，PAPI 提供了一組範例供參考。此外，預設事件和計數器分析工具包(CAT) 也是 PAPI 的一部分，可用於輔助事件選擇與配置。
 
@@ -144,7 +144,7 @@ Vampir 是一款商業工具，用於將事件日誌可視化為時間軸和統�
 Score-P 是一個高度可擴展且易於使用的工具套件，專為高效能計算（HPC）應用程式的性能分析與事件追蹤而設計。它是為 Vampir 生成事件日誌的首選方法。欲了解更多有關 Vampir 和 Score-P 的資訊，請參閱其用戶手冊，相關資料可在各自的官網上找到。
 AMD ROCm 提供了完整的 AMD GPU 計算生態系統。除了完整的編譯與加速應用程式運行工具鏈外，ROCm 還提供了用於偵錯與性能分析的工具與 API。此外，ROCm 也提供 API 給外部工具，用於記錄應用程式的執行行為與性能指標。
 Score-P 利用 AMD 的 rocProfiler 和 rocTracer 庫進行性能分析：
-rocTracer 庫基於回呼機制運行，工具會向特定事件註冊函式，這些事件會由 ROCm Runtime 觸發，包括 HIP API 函式的進入與退出、主機與設備間的數據傳輸、核心啟動操作等。
+rocTracer 庫基於callback機制運行，工具會為特定事件註冊函式，這些事件會由 ROCm Runtime 觸發，包括 HIP API 函式的進入與退出、host與device間的數據傳輸、kernel啟動操作等。
 rocProfiler 庫則用於定期採樣 GPU 的性能指標。
 這些工具的結合能有效記錄應用程式運行時的行為與性能數據，便於進一步分析和優化。
 
@@ -157,23 +157,23 @@ rocProfiler 庫則用於定期採樣 GPU 的性能指標。
     \label{fig:PAPI8}
 \end{figure}
 
-在 Score-P 中，僅支援與高效能計算（HPC）相關的 ROCm tracer API 子集，並將這些介面報告的事件以 Open Trace Format (OTF) 版本 2（OTF2）形式呈現。生成的 OTF2 追蹤檔案可通過 Vampir 進行分析。
+在 Score-P 中，僅支援與高效能計算（HPC）相關的 ROCm tracer API 子集，並將這些的報告事件以 Open Trace Format (OTF) 版本 2（OTF2）形式呈現。生成的 OTF2 追蹤檔案可通過 Vampir 進行分析。
 
-目前支援的事件涵蓋主機與設備之間的以下活動：
+目前支援的事件涵蓋host與device之間的以下活動：
 
 \begin{enumerate}
     \item Stream 管理：追蹤 GPU Stream 的創建、使用與銷毀。
-    \item 核心啟動（Kernel launches）：記錄 GPU 核心的啟動操作。
-    \item 主機與設備記憶體分配：監控記憶體分配和釋放的操作。
-    \item 主機與設備間的同步與非同步記憶體傳輸：包括數據在主機與設備之間的傳輸過程。
-    \item 設備與 Stream 同步：記錄同步操作，確保主機與設備間的協調執行。
-    \item 主機端的用戶自定義標記（Instrumentation）：透過 rocTX 實現，用戶可以在主機端自定義標記來追蹤應用程式執行中的關鍵事件。
+    \item kernel啟動（Kernel launches）：記錄 GPU kernel的啟動操作。
+    \item host與device記憶體分配：監控記憶體分配和釋放的操作。
+    \item host與device間的同步與非同步記憶體傳輸：包括數據在host與device之間的傳輸過程。
+    \item device與 Stream 同步：記錄同步操作，確保host與device間的協調執行。
+    \item host端的用戶自定義標記（Instrumentation）：透過 rocTX 實現，用戶可以在host端自定義標記來追蹤應用程式執行中的關鍵事件。
 \end{enumerate}
 
 
 % 這些功能使得 Score-P 能夠詳細記錄 HPC 應用程式的運行行為，生成的 OTF2 文件為 Vampir 提供了深入分析應用性能和瓶頸的基礎。
 
-大多數這些事件在 Score-P 中被映射為函式進入/退出事件，但某些事件包含額外資訊。Score-P 提供了正常的核心名稱過濾功能，因此程式設計師可以提供過濾檔案以排除特定的核心呼叫。記憶體分配則使用主機與設備的獨立分配指標進行追蹤，數據傳輸則被建模為主機與設備之間的單向通信事件。
+大多數這些事件在 Score-P 中被映射為函式進入/退出事件，但某些事件包含額外資訊。Score-P 提供了正常的kernel名稱過濾功能，因此程式設計師可以提供過濾檔案以排除特定的kernel呼叫。記憶體分配則使用host與device的獨立分配指標進行追蹤，數據傳輸則是host與device之間的單向通信事件。
 
 一組與 HIP 相關的 Score-P 環境變數允許程式設計師選擇記錄或忽略哪些類別的事件。預設情況下，所有事件都會被記錄。要採樣的指標列表也可以通過環境變數控制，並可使用由 rocProfiler 套件提供的 rocProf 工具進行查詢。
 
@@ -185,7 +185,7 @@ $ rocprof --list-derived
 \subsection{Score-P 用法}
 
 
-Score-P 提供了一個命令，可在編譯/連結階段對應用程式進行插桿（Instrumentation）。某些平行框架（例如 MPI 和 OpenMP）可以自動檢測，而某些則必須顯式啟用。要使用此功能，應用程式必須通過在所有編譯/連結命令前加上 Score-P 插桿器（scorep）來重新構建。
+Score-P 提供了一個命令，可在編譯/連結階段對應用程式進行Instrumentation。某些平行框架（例如 MPI 和 OpenMP）可以自動檢測，而某些則必須顯式啟用。要使用此功能，應用程式必須通過在所有編譯/連結命令前加上 Score-P 插桿器（scorep）來重新建構。
 例如，原始命令為：
 \begin{lstlisting}
 $ gcc -c foo.o
@@ -196,7 +196,7 @@ $ scorep gcc -c foo.o
 \end{lstlisting}
 同樣的操作適用於連結命令。
 
-ROCm 基於 tracer 的插桿通過將 --hip 選項傳遞給 Score-P 插桿器（scorep）來啟用，其方式與啟用 CUDA 或其他加速器模式的插桿相同。scorep-hipcc 編譯器封裝器會自動傳遞此標誌。更多有關使用 ROCm 插桿的詳細範例，請參閱 Score-P 文檔。
+ROCm 基於 tracer 的插桿通過將 --hip 選項傳遞給 Score-P 插桿器（scorep）來啟用，其方式與啟用 CUDA 或其他加速器模式的Instrumentation相同。scorep-hipcc 編譯器封裝器會自動傳遞此標誌。更多有關使用 ROCm 插桿的詳細範例，請參閱 Score-P 文檔。
 
 \subsection{分析 \Quicksilver 應用程式}
 接下來，我們展示在執行 Quicksilver CORAL 基準應用程式時使用 Score-P 和 Vampir 的範例。Quicksilver 基準應用程式是一個 Monte Carlo Transport Code 的代理應用程式，屬於 Lawrence Livermore National Laboratory (LLNL) 的 Mercury 協同設計的一部分。我們的範例使用了支援 ROCm 的 Quicksilver 版本，該版本位於 GitHub 儲存庫的 AMD-HIP 分支中。
@@ -226,12 +226,12 @@ $ SCOREP_ENABLE_TRACING=true \
   .∕qs
 \end{lstlisting}
 
-生成的追蹤檔位於 Quicksilver-1x1-Instrumented 中，現在可以通過 Vampir 開啟進行分析。圖 13.9 展示了主機進程與加速器流 RocM[0:0] 的主時間軸。該格式與 CUDA 追蹤中使用的格式相同，包括加速器流的命名，其中括號中的數字表示設備和流的 ID。此外，該圖在 "counter timelines" 的下方部分展示了主機與設備的記憶體分配指標。主機初始化階段可以輕鬆識別，在此階段會分配主機記憶體。同樣，也可以識別設備初始化階段的記憶體分配過程。
+生成的追蹤檔位於 Quicksilver-1x1-Instrumented 中，現在可以通過 Vampir 開啟進行分析。圖 13.9 展示了host進程與加速器stream RocM[0:0] 的主時間軸。該格式與 CUDA 追蹤中使用的格式相同，包括加速器stream的命名，其中括號中的數字表示device和stream的 ID。此外，該圖在 "counter timelines" 的下方部分展示了host與device的記憶體分配指標。host初始化階段可以輕鬆識別，在此階段會分配host記憶體。同樣，也可以識別device初始化階段的記憶體分配過程。
 
 \begin{figure}
     \centering
     \includegraphics[width=0.9\linewidth]{FileAusiliari/Screenshots/Figure13-9.png}
-    \caption{主時間軸顯示主機和裝置記憶體使用率。}
+    \caption{主時間軸顯示host和裝置記憶體使用率。}
     \label{fig:PAPI9}
 \end{figure}
 
@@ -240,18 +240,18 @@ $ SCOREP_ENABLE_TRACING=true \
 \begin{figure}
     \centering
     \includegraphics[width=0.9\linewidth]{FileAusiliari/Screenshots/Figure13-10.png}
-    \caption{主機/裝置傳輸的主控和進程時間軸。}
+    \caption{host/裝置傳輸的主控和進程時間軸。}
     \label{fig:PAPI10}
 \end{figure}
 
-圖 13.11 提供了設備記憶體分配的快照，並包含主時間軸，顯示數據傳輸發生的時間（以黑色圓圈標示）。這清楚地展示了分配/填充週期的模式。
+圖 13.11 提供了device記憶體分配的快照，並包含主時間軸，顯示數據傳輸發生的時間（以黑色圓圈標示）。這清楚地展示了分配/填充週期的模式。
 
-最後，圖 13.12 展示了主要計算階段，其中涉及單次核心啟動的執行以及隨後的設備同步以等待結果。追蹤顯示，對於 Quicksilver 而言，大部分核心執行期間 CPU 處於空閒狀態，遵循 啟動–同步–複製結果 的模式。
+最後，圖 13.12 展示了主要計算階段，其中涉及單次kernel啟動的執行以及隨後的device同步以等待結果。追蹤顯示，對於 Quicksilver 而言，大部分kernel執行期間 CPU 處於空閒狀態，遵循 啟動–同步–複製結果 的模式。
 
 \begin{figure}
     \centering
     \includegraphics[width=0.9\linewidth]{FileAusiliari/Screenshots/Figure13-11.png}
-    \caption{主時間軸顯示設備記憶體利用率。}
+    \caption{主時間軸顯示device記憶體利用率。}
     \label{fig:PAPI11}
 \end{figure}
 
@@ -273,7 +273,7 @@ Trace Compass 是一款用於多種追蹤格式的可視化和分析工具。追
 
 \begin{enumerate}
     \item 事件處理與狀態建模
-每個事件會被傳遞到一個或多個分析模組，用於建模系統的狀態（例如，進程與執行緒表、每個執行緒的狀態以及 GPU 計算核心）。例如，process\_create 事件會向進程表新增一個進程和執行緒，而排程事件會基於相關核心更新當前與即將執行的執行緒狀態。整個追蹤期間所建模狀態的數據庫稱為「狀態歷史」。
+每個事件會被傳遞到一個或多個分析模組，用於建模系統的狀態（例如，進程與執行緒表、每個執行緒的狀態以及 GPU 計算kernel）。例如，process\_create 事件會向進程表新增一個進程和執行緒，而排程事件會基於相關kernel更新當前與即將執行的執行緒狀態。整個追蹤期間所建模狀態的數據庫稱為「狀態歷史」。
     \item 跨節點追蹤同步
 來自不同節點的追蹤（例如積極交換網路封包的節點）可以通過匹配不同節點的發送與接收事件來同步，並計算時鐘漂移與偏移量。
     \item 事件內容與高層次視圖
@@ -291,7 +291,7 @@ Trace Compass 被重建為將其 GUI 前端與追蹤讀取和分析後端分離�
 \subsubsection{通用追蹤格式Common Trace Format (CTF)}
 CTF (Common Trace Format) 是一種二進位追蹤格式，設計目的是將追蹤開銷降到最低。它具有通用性，允許程式設計師定義自己的事件類型，其有效負載格式則定義於一個元數據檔案中。該元數據檔案在解析時會將追蹤內容轉換為高階表示。
 
-CTF 提供了一個插件，支援使用 ROCm 的 GPU 追蹤程式，並結合 rocProfiler 和 rocTracer。該插件使用優先隊列對 HIP 和 HSA 事件按發生順序進行排序，然後利用 barectf 將它們寫入 CTF 流中。生成的追蹤資料可以通過 Trace Compass 進行分析和可視化顯示。
+CTF 提供了一個插件，支援使用 ROCm 的 GPU 追蹤程式，並結合 rocProfiler 和 rocTracer。該插件使用優先隊列對 HIP 和 HSA 事件按發生順序進行排序，然後利用 barectf 將它們寫入 CTF stream中。生成的追蹤資料可以通過 Trace Compass 進行分析和可視化顯示。
 
 \subsubsection{OTF2}
 OTF2 [61, 28] 是一種常見的二進位追蹤格式，用於追蹤大規模平行計算系統。這類追蹤通常會生成大量的追蹤檔案，有時會達到數百 GB 或甚至 TB 的數據量。然而，OTF2 經過優化，可生成緊湊且高效的結果 [81]。
@@ -372,9 +372,9 @@ https://github.com/dorsal-lab/tracevizlab/tree/master/labs/304-rocm-traces
     \label{fig:PAPI13}
 \end{figure}
 
-圖 13.13 展示了一個 HIP 程式執行的詳細視圖。該程式的 add4 HIP kernel 來自 HIP-Examples [7] 儲存庫。此追蹤包含四個不同計算核心連續執行的事件。在圖中：左上方的菜單顯示已打開的不同追蹤。中間左側顯示可用的分析。左下方顯示用戶選擇的詳細資訊。主視圖包含程式的火焰圖分析。
+圖 13.13 展示了一個 HIP 程式執行的詳細視圖。該程式的 add4 HIP kernel 來自 HIP-Examples [7] 儲存庫。此追蹤包含四個不同計算kernel連續執行的事件。在圖中：左上方的菜單顯示已打開的不同追蹤。中間左側顯示可用的分析。左下方顯示用戶選擇的詳細資訊。主視圖包含程式的火焰圖分析。
 
-從上到下，我們可以看到系統執行緒按 API 類型（如 HIP 和 HSA）及記憶體傳輸進行分組。在底部，展示了 GPU 核心的執行情況。圖中的不同區域包括：每個隊列中的核心執行。每個 HIP 流中的核心執行。每個核心被分配一種特定顏色，箭頭表示 HIP API 呼叫與實際 GPU 核心執行之間的依賴關係。需要注意的是，由於初始化過程發生在第一步，首次執行耗時較長。
+從上到下，我們可以看到系統執行緒按 API 類型（如 HIP 和 HSA）及記憶體傳輸進行分組。在底部，展示了 GPU kernel的執行情況。圖中的不同區域包括：每個隊列中的kernel執行。每個 HIP stream中的kernel執行。每個kernel被分配一種特定顏色，箭頭表示 HIP API 呼叫與實際 GPU kernel執行之間的依賴關係。需要注意的是，由於初始化過程發生在第一步，首次執行耗時較長。
 
 
 \subsubsection{Theia.cpp debug extension}
@@ -400,7 +400,7 @@ Theia.cpp Debug Extension 提供了一個用於 C/C++ 及相關程式語言的�
     \label{fig:PAPI15}
 \end{figure}
 
-在 圖 13.15 中，我們展示了一個深度學習程式的執行以及其 Linux 核心追蹤分析。為了生成 Linux 核心追蹤，我們使用了 Linux Trace Toolkit: Next Generation [50]，並啟用了幾個追蹤點。追蹤器記錄了 Linux 核心事件，例如系統調用、記憶體分配和執行緒搶佔，這些對於偵錯多執行緒應用程式非常有用。僅依靠 GPU API 調用有時無法提供完整的資訊。在這種情況下，結合多種追蹤來源能讓程式設計師更緊密地追蹤程式行為。此處展示的分析與 Theia-trace-extension 部分相同，僅是使用了不同的前端來訪問相同的 Trace Compass 伺服器後端。
+在 圖 13.15 中，我們展示了一個深度學習程式的執行以及其 Linux kernel追蹤分析。為了生成 Linux kernel追蹤，我們使用了 Linux Trace Toolkit: Next Generation [50]，並啟用了幾個追蹤點。追蹤器記錄了 Linux kernel事件，例如系統調用、記憶體分配和執行緒搶佔，這些對於偵錯多執行緒應用程式非常有用。僅依靠 GPU API 調用有時無法提供完整的資訊。在這種情況下，結合多種追蹤來源能讓程式設計師更緊密地追蹤程式行為。此處展示的分析與 Theia-trace-extension 部分相同，僅是使用了不同的前端來訪問相同的 Trace Compass 伺服器後端。
 
 圖的底部顯示了“關鍵流程”視圖，展示了程式主執行緒的關鍵路徑。關鍵路徑分析從執行緒的末端開始，沿著依賴鏈向前回溯，根據資源爭用識別出最長路徑。因此，我們可以確定進程在何時必須等待信號量或 I/O 操作。在圖中，可以看到執行緒 1,211,649 和 1,211,698 之間的關係，其中前者必須等待後者完成一個操作。
 
@@ -452,13 +452,13 @@ tau_exec -T rocm,serial,rocprofiler -ebs -rocm .∕a.out
     \label{fig:PAPI17}
 \end{figure}
 
-當 MPI 未為 TAU 配置時，執行時會選擇序列化的配置標籤。通過 tauexec 啟動時，TAU 會預加載 TAU 動態共享對象到正在執行的應用程式的位址空間，生成回調並攔截系統調用。可選地，當使用 -ebs 選項時，TAU 會使用事件驅動的採樣（EBS）定期中斷應用程式，並生成與原始碼位置對應的詳細剖析數據。通過 rocProfiler 和 rocTracer APIs 的回調，TAU 收集 GPU 上執行核心的時間戳資訊以及數據傳輸資訊。
+當 MPI 未為 TAU 配置時，執行時會選擇序列化的配置標籤。通過 tauexec 啟動時，TAU 會預加載 TAU 動態共享對象到正在執行的應用程式的位址空間，生成回調並攔截系統調用。可選地，當使用 -ebs 選項時，TAU 會使用事件驅動的採樣（EBS）定期中斷應用程式，並生成與原始碼位置對應的詳細剖析數據。通過 rocProfiler 和 rocTracer APIs 的回調，TAU 收集 GPU 上執行kernel的時間戳資訊以及數據傳輸資訊。
 
-然而，時間戳對可能無序，這對於生成需要單調遞增系統時間戳的追蹤檔案構成挑戰。同時，GPU 時間戳還需要與 CPU 時間戳相關聯，以生成一致的全局性能數據視圖。TAU 使用一種新穎的滑動窗口演算法來緩衝核心時間戳對，並在緩衝區滿時將它們寫入磁碟。通過延遲提交追蹤數據，系統可以處理無序的核心時間戳。目前滑動窗口大小通過試錯選擇為 128K 對啟動/停止核心執行事件。記錄在剖析檔案中的核心事件會為每個隊列保存到單獨的執行執緒中。
+然而，時間戳對可能無序，這對於生成需要單調遞增系統時間戳的追蹤檔案構成挑戰。同時，GPU 時間戳還需要與 CPU 時間戳相關聯，以生成一致的全局性能數據視圖。TAU 使用一種新穎的滑動窗口演算法來緩衝kernel時間戳對，並在緩衝區滿時將它們寫入磁碟。通過延遲提交追蹤數據，系統可以處理無序的kernel時間戳。目前滑動窗口大小通過試錯選擇為 128K 對啟動/停止kernel執行事件。記錄在剖析檔案中的kernel事件會為每個隊列保存到單獨的執行執緒中。
 
-圖 13.17 顯示了在 ParaProf 工具中 rochpcg 應用程式的某個隊列中每個核心的耗時。TAU 支援通過 EBS 進行 CPU 和 GPU 的剖析。執行於 CPU 上的程式碼區域可以通過性能插桿進行高亮顯示，無需重新編譯程式碼。圖 13.18 顯示了在 Quantum Monte Carlo Package (QMCPack) 應用程式中，執行於多個執行緒上的 computeDistance 方法的耗時。在此，我們可以觀察應用程式區域在多執行緒的 CPU 端的表現。
+圖 13.17 顯示了在 ParaProf 工具中 rochpcg 應用程式的某個隊列中每個kernel的耗時。TAU 支援通過 EBS 進行 CPU 和 GPU 的剖析。執行於 CPU 上的程式碼區域可以通過性能插桿進行高亮顯示，無需重新編譯程式碼。圖 13.18 顯示了在 Quantum Monte Carlo Package (QMCPack) 應用程式中，執行於多個執行緒上的 computeDistance 方法的耗時。在此，我們可以觀察應用程式區域在多執行緒的 CPU 端的表現。
 
-需要注意的是，單個核心的執行可能會在多個 GPU 上進行追蹤，如 圖 13.19 所示。儘管這些二維顯示資訊豐富，TAU 的 ParaProf 剖析瀏覽器還包含了一個 3D 可視化工具，展示了映射到執行緒（階層）和函式的代碼區域中專用耗時的互動式 3D 視圖，使用戶能夠查看剖析形態。圖 13.16 顯示了一個 3D 視窗，其中十字線表示函式，滑塊表示執行緒，用戶可以準確定位單個執行緒。
+需要注意的是，單個kernel的執行可能會在多個 GPU 上進行追蹤，如 圖 13.19 所示。儘管這些二維顯示資訊豐富，TAU 的 ParaProf 剖析瀏覽器還包含了一個 3D 可視化工具，展示了映射到執行緒（階層）和函式的代碼區域中專用耗時的互動式 3D 視圖，使用戶能夠查看剖析形態。圖 13.16 顯示了一個 3D 視窗，其中十字線表示函式，滑塊表示執行緒，用戶可以準確定位單個執行緒。
 
 
 \subsection{使用 TAU 追蹤 HIP program}
@@ -474,15 +474,15 @@ tau_exec -T rocm,serial,rocprofiler -ebs -rocm .∕a.out
 \begin{figure}
     \centering
     \includegraphics[width=0.9\linewidth]{FileAusiliari/Screenshots/Figure13-19.png}
-    \caption{TAU 的 ParaProf 工具顯示單一核心在多個 GPU 佇列中的執行情況。}
+    \caption{TAU 的 ParaProf 工具顯示單一kernel在多個 GPU 佇列中的執行情況。}
     \label{fig:PAPI19}
 \end{figure}
 
-雖然剖析提供了匯總統計資料（例如，多次調用核心的總執行時間），但追蹤能夠突出時間上的變化。TAU 生成的追蹤檔案既可以是其原生的 TAU 格式，也可以是 OTF2 格式。以 TAU 格式生成的追蹤可以合併並轉換為 Jumpshot 的 SLOG2 格式以及 JSON 格式，以便通過 Google Chrome 的 chrome://tracing 或 Perfetto trace browser [32] 進行可視化。
+雖然剖析提供了匯總統計資料（例如，多次調用kernel的總執行時間），但追蹤能夠突出時間上的變化。TAU 生成的追蹤檔案既可以是其原生的 TAU 格式，也可以是 OTF2 格式。以 TAU 格式生成的追蹤可以合併並轉換為 Jumpshot 的 SLOG2 格式以及 JSON 格式，以便通過 Google Chrome 的 chrome://tracing 或 Perfetto trace browser [32] 進行可視化。
 
-TAU 還支援 Kokkos [76, 63] 的剖析介面，該介面提供了一種性能可移植的方法，使用 C++ Lambda 函式來表達應用程式中的平行操作，例如 for、scan 和 reduce 操作。這些 Lambda 函式內部會轉換為 GPU 後端（例如 HIP）。這些平行操作的第一個參數是一個可選的字元串，用於表示有意義的原始碼結構。TAU 與 Kokkos 介接，跟蹤這些高階抽象並將核心執行映射到它們上。在缺乏用戶註解的情況下，使用模板實例化來進行跟蹤。
+TAU 還支援 Kokkos [76, 63] 的剖析介面，該介面提供了一種性能可移植的方法，使用 C++ Lambda 函式來表達應用程式中的平行操作，例如 for、scan 和 reduce 操作。這些 Lambda 函式內部會轉換為 GPU 後端（例如 HIP）。這些平行操作的第一個參數是一個可選的字元串，用於表示有意義的原始碼結構。TAU 與 Kokkos 介接，跟蹤這些高階抽象並將kernel執行映射到它們上。在缺乏用戶註解的情況下，使用模板實例化來進行跟蹤。
 
-圖 13.22 展示了在 T.U. Dresden 的 Vampir 追蹤可視化工具中核心執行的時間軸顯示。通過 TAU 的 OTF2 追蹤生成功能，在使用 tauexec 和相應的命令（如 export TAU\_TRACE=1 或 export TAU\_TRACE\_FORMAT=otf2）啟動未修改的程式碼後，追蹤檔案無需進行處理（例如合併或轉換）。
+圖 13.22 展示了在 T.U. Dresden 的 Vampir 追蹤可視化工具中kernel執行的時間軸顯示。通過 TAU 的 OTF2 追蹤生成功能，在使用 tauexec 和相應的命令（如 export TAU\_TRACE=1 或 export TAU\_TRACE\_FORMAT=otf2）啟動未修改的程式碼後，追蹤檔案無需進行處理（例如合併或轉換）。
 
 
 \subsection{使用 APEX 衡量 HIP program}
@@ -490,18 +490,18 @@ TAU 還支援 Kokkos [76, 63] 的剖析介面，該介面提供了一種性能�
 \begin{figure}
     \centering
     \includegraphics[width=0.9\linewidth]{FileAusiliari/Screenshots/Figure13-20.png}
-    \caption{APEX 任務依賴樹由 Perfetto 渲染。在此範例中，第一個 CPU 執行緒位於追蹤的頂部，工作 CPU 執行緒位於底部，而 HIP GPU 活動則位於三個工作執行緒的下方。APEX 還捕捉了 ROCTX 插桿調用與標記。紅色箭頭突出顯示的流事件表示從 HIP API 調用到 GPU 設備活動的控制流。}
+    \caption{APEX 任務依賴樹由 Perfetto 渲染。在此範例中，第一個 CPU 執行緒位於追蹤的頂部，工作 CPU 執行緒位於底部，而 HIP GPU 活動則位於三個工作執行緒的下方。APEX 還捕捉了 ROCTX 插桿調用與標記。紅色箭頭突出顯示的stream事件表示從 HIP API 調用到 GPU device活動的控制stream。}
     \label{fig:PAPI20}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[width=0.9\linewidth]{FileAusiliari/Screenshots/Figure13-21.png}
-    \caption{APEX 任務依賴樹由 Graphviz 渲染。紅色表示任務圖中每個節點的相對耗時。需要注意的是，由於某些樹節點在多個執行緒或設備上同時執行，其累積時間可能超過總執行時間。HIP API 調用和設備活動被捕捉到依賴樹中，且 APEX 還捕捉了 ROCTX 插桿調用與標記。}
+    \caption{APEX 任務依賴樹由 Graphviz 渲染。紅色表示任務圖中每個節點的相對耗時。需要注意的是，由於某些樹節點在多個執行緒或device上同時執行，其累積時間可能超過總執行時間。HIP API 調用和device活動被捕捉到依賴樹中，且 APEX 還捕捉了 ROCTX 插桿調用與標記。}
     \label{fig:PAPI21}
 \end{figure}
 
-APEX 提供了一個類似 tauexec 的剖析工具，名為 apexexec，該工具會自動預加載 APEX 測量庫並設置適當的環境變數來剖析支援的執行時環境。例如，要執行一個 HIP 範例程式（如 Matrix-Transpose\_hip），用戶在程式前添加 apexexec，並將任何與 APEX 相關的參數添加為 --apex 前綴。
+APEX 提供了一個類似 tauexec 的剖析工具，名為 apexexec，該工具會自動預載入 APEX 測量庫並設置適當的環境變數來剖析支援的執行時環境。例如，要執行一個 HIP 範例程式（如 Matrix-Transpose\_hip），用戶在程式前添加 apexexec，並將任何與 APEX 相關的參數添加為 --apex 前綴。
 
 在此範例中，啟用了多個選項，使其更具趣味性：
 
@@ -509,7 +509,7 @@ APEX 提供了一個類似 tauexec 的剖析工具，名為 apexexec，該工具
 
 hipcc 編譯器和執行時還支援 OpenMP 剖析介面（OMPT），因此啟用了與 OMPT 相關的選項。圖 13.21 顯示了使用 Graphviz [14] 的 dot 工具渲染的任務樹。為了使圖表更易讀，此次執行未啟用 OMPT 支援。
 
-圖 13.20 中，追蹤檔通過 Perfetto 渲染，定期捕捉了多個主機和設備端的度量指標，包括功耗和溫度、記憶體使用率、GPU 和 GPU 記憶體利用率等。流事件通過 CPU 執行緒 0 與 HIP 活動之間的紅色箭頭進行可視化，揭示了資源間的控制流依賴關係。APEX 還捕捉了使用 ROCTX API 添加的 CPU 插桿範圍與標記，該 API 由 ROC-Tracer 庫提供。
+圖 13.20 中，追蹤檔通過 Perfetto 渲染，定期捕捉了多個host和device端的度量指標，包括功耗和溫度、記憶體使用率、GPU 和 GPU 記憶體利用率等。stream事件通過 CPU 執行緒 0 與 HIP 活動之間的紅色箭頭進行可視化，揭示了資源間的控制stream依賴關係。APEX 還捕捉了使用 ROCTX API 添加的 CPU 插桿範圍與標記，該 API 由 ROC-Tracer 庫提供。
 
 
 \subsection{TAU 總結}
@@ -521,7 +521,7 @@ hipcc 編譯器和執行時還支援 OpenMP 剖析介面（OMPT），因此啟�
     \label{fig:PAPI22}
 \end{figure}
 
-TAU 擁有廣泛的功能，提供了對低階 CPU 和 GPU 核心事件性能的全貌，涵蓋主機與設備之間以及跨網路的數據傳輸，並支援 OpenMP、OpenACC、OpenCL、MPI 和 Kokkos。對於非同步執行的支援體現在 TAU 的 APEX 測量層中，而對剖析和追蹤的可視化、數據捕捉與存儲性能的支援則由其 TAUdb 資料庫系統提供。對於跨實驗分析與數據挖掘，TAU 的 perfexplorer [35] 支援擴展性能工程，提供了強大的分析工具。
+TAU 擁有廣泛的功能，提供了對低階 CPU 和 GPU kernel事件性能的全貌，涵蓋host與device之間以及跨網路的數據傳輸，並支援 OpenMP、OpenACC、OpenCL、MPI 和 Kokkos。對於非同步執行的支援體現在 TAU 的 APEX 測量層中，而對剖析和追蹤的可視化、數據捕捉與存儲性能的支援則由其 TAUdb 資料庫系統提供。對於跨實驗分析與數據挖掘，TAU 的 perfexplorer [35] 支援擴展性能工程，提供了強大的分析工具。
 
 \section{TotalView Debugger}
 
@@ -533,7 +533,7 @@ TAU 擁有廣泛的功能，提供了對低階 CPU 和 GPU 核心事件性能的
     \label{fig:PAPI23}
 \end{figure}
 
-TotalView for the HPC Debugger 是由 Perforce Software 開發的除錯工具，擁有超過 30 年的發展歷史。在此期間，它通過為 AMD、Cray、HP、IBM、Intel、SGI、Sun 等硬體廠商提供除錯器，持續支持 HPC 社群。TotalView 可在 Unix、Linux、macOS 和自定義核心上運行，並隨著 HPC 領域的持續變化，不斷適應新的架構、語言和技術。
+TotalView for the HPC Debugger 是由 Perforce Software 開發的除錯工具，擁有超過 30 年的發展歷史。在此期間，它通過為 AMD、Cray、HP、IBM、Intel、SGI、Sun 等硬體廠商提供除錯器，持續支持 HPC 社群。TotalView 可在 Unix、Linux、macOS 和自定義kernel上運行，並隨著 HPC 領域的持續變化，不斷適應新的架構、語言和技術。
 
 如今，TotalView 是一個功能豐富的除錯器，支持 C、C++ 和 Fortran 程式語言，包含使用這些語言和 Python 建構的多語言應用程式。它還支援多種混合的平行程式設計範式，例如 MPI、OpenMP、pthreads、HIP、CUDA、Open Accelerators (OpenACC)、Unified Parallel C、Coarray Fortran、Global Arrays 和 Symmetric Hierarchical Memory。
 
@@ -542,7 +542,7 @@ TotalView 提供了一個易於使用的圖形使用者介面（GUI）（見 圖
 CLI 是一個可程式化的工具命令語言解釋器，支持創建用戶自定義工具來擴展除錯器的功能，並提供了一種腳本語言，用於實現自動化操作。TotalView 可以通過其 TVScript 和 MemScript 框架以腳本模式運行，支持非互動式的批處理除錯。該框架基於事件-行為模型，允許程式設計師定義程式中可能發生的事件以及事件發生時需要執行的行為。數據會記錄到一組輸出檔案中，供批處理任務完成後進行審查。
 
 
-TotalView 提供多種其他除錯功能，包括 C、C++ 和 Fortran 表達式求值器、數據監視點、C++ 標準模板庫元素可視化器（如 map、set、array、list、string 等）、進程與執行緒顯示聚合器、記憶體除錯器、核心檔除錯器、非同步執行緒控制器、反向除錯器、異構除錯器，以及內建的幫助和文檔工具。
+TotalView 提供多種其他除錯功能，包括 C、C++ 和 Fortran 表達式求值器、數據監視點、C++ 標準模板庫元素可視化器（如 map、set、array、list、string 等）、進程與執行緒顯示聚合器、記憶體除錯器、kernel檔除錯器、非同步執行緒控制器、反向除錯器、異構除錯器，以及內建的幫助和文檔工具。
 
 這些功能使程式設計師能夠理解其複雜應用程式的運行方式並識別潛在的邏輯錯誤。除了發現軟體缺陷，TotalView 還能幫助理解新程式碼，其動態分析功能讓程式設計師能夠以可視化數據的方式體驗程式的運行過程。
 
@@ -552,7 +552,7 @@ TotalView 的需求包括：
 生成準確除錯資訊的編譯器（如 可執行與可連結格式 (ELF)、DWARF 或 符號表字符串）。MPI-and-Rationals 介面。libpthread\_db 執行緒級追蹤介面。支援多節點除錯的 TCP/IP 套接字和遠程 Shell（如 SSH）。AMD GPU Debug API 和 NVIDIA CUDA Debug API。
 TotalView 提供對 AMD 和 NVIDIA GPU 的先進除錯支援。程式設計師可以在同一會話中輕鬆除錯多個節點上的多個 GPU。利用 TotalView 的 GPU 功能，程式設計師可以輕鬆理解程式碼的運行方式，逐行檢查程式碼、檢視 GPU 特定數據，並對 CPU 和 GPU 程式碼進行除錯。TotalView 支援多種針對 GPU 的常見語言，包括 CUDA、HIP、OpenCL 和 OpenMP。
 
-TotalView 支援異構應用程式的除錯，這些應用程式涉及多種處理器架構的組合（如 PowerPC、x86\_64 和各種 GPU）。TotalView 的位址空間模型支援包含多個異構位址空間的進程，其中不同的執行緒可以在其 GPU 設備上下文中運行，或者與其他執行緒共享進程位址空間（如 pthreads）。隨著程式設計語言擴展以支持加速設備（如 OpenMP target 構造），位址空間模型允許 TotalView 更準確地重建進程作為 CPU 或 GPU 容器的概念模型。
+TotalView 支援異構應用程式的除錯，這些應用程式涉及多種處理器架構的組合（如 PowerPC、x86\_64 和各種 GPU）。TotalView 的位址空間模型支援包含多個異構位址空間的進程，其中不同的執行緒可以在其 GPU device上下文中運行，或者與其他執行緒共享進程位址空間（如 pthreads）。隨著程式設計語言擴展以支持加速device（如 OpenMP target 構造），位址空間模型允許 TotalView 更準確地重建進程作為 CPU 或 GPU 容器的概念模型。
 
 
 
@@ -583,13 +583,13 @@ totalview -rocm -args bit_extract
 
 TotalView 提供了統一的視圖，展示所有影像檔案（如可執行檔、共享庫和 GPU ELF 映像）及所有源碼檔案中的源碼和行級斷點。因此，任何在運行時動態加載的程式碼（包括 AMD GPU ELF 映像）都會在源碼顯示中統一呈現。在源碼行上設置斷點後，無論該源碼的機器碼是否已加載，當執行到該行時，程式會在該行或附近停止。程式設計師可以在動態加載的程式碼（如共享庫和 GPU 映像檔案）中設置待處理的斷點。要設置待處理的斷點，只需在源碼顯示中選擇行號，TotalView 會安排程式盡可能靠近該源碼行停止。
 
-預設情況下，HIP 運行時會推遲 GPU 程式碼的加載，直到首次啟動核心。因此，在 HIP 源碼中添加的所有斷點必須事先設置為待處理斷點。然而，將 HIP\_ENABLE\_DEFERRED\_LOADING（HIP 的環境變數）設置為零，可以禁用推遲的 GPU 程式碼加載。這樣可以確保 GPU 程式碼在應用程式進入主函式前已加載。當禁用 GPU 程式碼的推遲加載後，在進入主函式時，GPU 源碼行資訊將變得可用，無需等待首次核心啟動，從而更容易在 GPU 程式碼中設置源碼級斷點。
+預設情況下，HIP 運行時會推遲 GPU 程式碼的加載，直到首次啟動kernel。因此，在 HIP 源碼中添加的所有斷點必須事先設置為待處理斷點。然而，將 HIP\_ENABLE\_DEFERRED\_LOADING（HIP 的環境變數）設置為零，可以禁用推遲的 GPU 程式碼加載。這樣可以確保 GPU 程式碼在應用程式進入主函式前已加載。當禁用 GPU 程式碼的推遲加載後，在進入主函式時，GPU 源碼行資訊將變得可用，無需等待首次kernel啟動，從而更容易在 GPU 程式碼中設置源碼級斷點。
 
-TotalView 為進程中的每個 GPU 代理（設備）分配一個負的調試執行緒 ID（DTID）。例如，使用兩個 GPU 設備的進程將有兩個調試 GPU 代理執行緒（例如，-1 和 -2）。程式設計師可以通過選擇進程內的 GPU 代理執行緒來專注於特定設備。
+TotalView 為進程中的每個 GPU 代理（device）分配一個負的調試執行緒 ID（DTID）。例如，使用兩個 GPU device的進程將有兩個調試 GPU 代理執行緒（例如，-1 和 -2）。程式設計師可以通過選擇進程內的 GPU 代理執行緒來專注於特定device。
 
 TotalView 為 Linux CPU 進程位址空間和每個 GPU 代理執行緒的位址空間分別維護獨立的位址空間。這些位址空間被放置在同一個 TotalView 共享組中，該共享組包含程式創建並共享的所有進程。
 
-斷點在共享組中創建並進行評估，並應用於共享組中的所有影像檔案（例如，可執行檔案、共享庫和 GPU ELF 映像）。因此，斷點既可以應用於 CPU 程式碼，也可以應用於 GPU 程式碼。這允許在主機程式碼中的源碼行上設置斷點，當 GPU 程式碼加載後，斷點會在 GPU 映像中的相同位置被設置。
+斷點在共享組中創建並進行評估，並應用於共享組中的所有影像檔案（例如，可執行檔案、共享庫和 GPU ELF 映像）。因此，斷點既可以應用於 CPU 程式碼，也可以應用於 GPU 程式碼。這允許在host程式碼中的源碼行上設置斷點，當 GPU 程式碼加載後，斷點會在 GPU 映像中的相同位置被設置。
 
 \begin{figure}
     \centering
@@ -632,9 +632,9 @@ HPCToolkit 支援多種 CPU 架構（如 x86-64、Power 和 ARM）、不同供�
 
 圖 13.25 展示了 HPCToolkit 用於分析 GPU 加速應用程式性能的工作流程。HPCToolkit 的 hpcrun 測量工具使用採樣技術測量 CPU 活動，並通過 GPU 廠商提供的剖析 API 收集 GPU 性能指標。hpcrun 可測量使用一種或多種 GPU 程式設計模型的程式。
 
-在程式執行期間加載 GPU 二進位檔時，hpcrun 記錄它們以便後續分析。對於提供細粒度測量 API 的 GPU，hpcrun 使用硬體支援或二進位插桿收集 GPU 核心的指令級特徵。
+在程式執行期間加載 GPU 二進位檔時，hpcrun 記錄它們以便後續分析。對於提供細粒度測量 API 的 GPU，hpcrun 使用硬體支援或二進位插桿收集 GPU kernel的指令級特徵。
 
-hpcrun 的輸出包括 CPU 和 GPU 活動的剖析檔和可選的追蹤檔。每個剖析檔包含一個 調用上下文樹，其中每條調用路徑（由樹節點表示）與一組指標（如執行時間和執行的指令數）相關聯。每個追蹤檔則包含 CPU 執行緒或 GPU 流的調用路徑和時間戳對的序列。
+hpcrun 的輸出包括 CPU 和 GPU 活動的剖析檔和可選的追蹤檔。每個剖析檔包含一個 調用上下文樹，其中每條調用路徑（由樹節點表示）與一組指標（如執行時間和執行的指令數）相關聯。每個追蹤檔則包含 CPU 執行緒或 GPU stream的調用路徑和時間戳對的序列。
 
 
 hpcstruct 分析 CPU 和 GPU 二進位檔以恢復有關程序、內聯函式、迴圈嵌套和源碼行的靜態資訊。此過程有兩個重要方面：從二進位檔中恢復行映射和內聯編譯器記錄的資訊，以及分析機器碼以恢復迴圈相關資訊。
@@ -687,9 +687,9 @@ hpcprof -o picgongpu.d picgongpu.m
     \label{fig:PAPI26}
 \end{figure}
 
-圖 13.26 展示了 PIConGPU 中一個熱點核心的自上而下剖析視圖。左下方的 scope pane 顯示了其統一的 CPU–GPU 調用上下文，包含三個部分：啟動核心的 HIP API 的 CPU 調用上下文、表示從主機到設備過渡的佔位框架（即 <gpu kernel>），以及 GPU 調用上下文。目前，在 AMD GPU 上的 GPU 調用上下文僅包含 GPU 核心，因為目前不支援核心內的細粒度測量。
+圖 13.26 展示了 PIConGPU 中一個熱點kernel的自上而下剖析視圖。左下方的 scope pane 顯示了其統一的 CPU–GPU 調用上下文，包含三個部分：啟動kernel的 HIP API 的 CPU 調用上下文、表示從host到device過渡的佔位框架（即 <gpu kernel>），以及 GPU 調用上下文。目前，在 AMD GPU 上的 GPU 調用上下文僅包含 GPU kernel，因為目前不支援kernel內的細粒度測量。
 
-圖 13.26 展示了 GPU 核心執行時間，右下方的面板顯示了一系列性能指標的列。HPCToolkit 還可以顯示進出 GPU 記憶體的拷貝操作的指標。頂部的 source pane 顯示了 HIP API（如 hipLaunchKernelGGL）的源碼行。用戶只需點擊調用上下文中的函數，即可導航到該函數的源碼位置。
+圖 13.26 展示了 GPU kernel執行時間，右下方的面板顯示了一系列性能指標的列。HPCToolkit 還可以顯示進出 GPU 記憶體的拷貝操作的指標。頂部的 source pane 顯示了 HIP API（如 hipLaunchKernelGGL）的源碼行。用戶只需點擊調用上下文中的函數，即可導航到該函數的源碼位置。
 
 
 \begin{figure}
@@ -711,7 +711,7 @@ hpcprof -o picgongpu.d picgongpu.m
     \label{fig:PAPI28}
 \end{figure}
 
-圖 13.28 展示了一個統一的 CPU–GPU 追蹤視圖。追蹤線從上到下分別表示 MPI ranks 1–16 的 CPU 執行緒和 GPU 流。每個 MPI rank 的執行也使用了一個 MPI 輔助執行緒，我們通過 hpcviewer 的 Filter 選單在追蹤視圖中隱藏了這些執行緒，因為它們在執行期間始終處於空閒狀態。
+圖 13.28 展示了一個統一的 CPU–GPU 追蹤視圖。追蹤線從上到下分別表示 MPI ranks 1–16 的 CPU 執行緒和 GPU stream。每個 MPI rank 的執行也使用了一個 MPI 輔助執行緒，我們通過 hpcviewer 的 Filter 選單在追蹤視圖中隱藏了這些執行緒，因為它們在執行期間始終處於空閒狀態。
 
 從追蹤視圖中可以看到，在執行的前三分之一期間，GPU 追蹤線為白色，表示 GPU 處於空閒狀態。這段時間代表應用程式的初始化階段。在剩餘的執行期間，每條 GPU 追蹤線上出現了零散的操作，表明 GPU 並未被完全利用。因此，程式設計師應仔細檢查 CPU 執行緒，以了解在 GPU 處於空閒狀態時它們正在執行的操作。
 
@@ -719,7 +719,7 @@ hpcprof -o picgongpu.d picgongpu.m
 
 \subsection{使用硬體計數器進行測量}
 
-HPCToolkit 使用田納西大學的 PAPI [71] 工具包（如本章前面所述）通過硬體計數器測量 GPU 活動。目前，工具將硬體計數器測量與單個 GPU 核心相關聯的唯一方法是使用現有供應商的 API 將核心進行序列化，並在每次執行前後讀取計數器數據。然而，序列化核心會減慢執行速度，並可能改變程式的行為。
+HPCToolkit 使用田納西大學的 PAPI [71] 工具包（如本章前面所述）通過硬體計數器測量 GPU 活動。目前，工具將硬體計數器測量與單個 GPU kernel相關聯的唯一方法是使用現有供應商的 API 將kernel進行序列化，並在每次執行前後讀取計數器數據。然而，序列化kernel會減慢執行速度，並可能改變程式的行為。
 
 我們使用 FloydWarshall，一個 HIP 範例程式 [7]，來展示 HPCToolkit 利用 GPU 硬體計數器測量應用程式性能特徵的能力。以下命令指示 HPCToolkit 使用 PAPI 測量 AMD GPU TCC（共享 L2 快取） 的命中和未命中情況。該命令如 Listing 13.7 所示。
 
@@ -732,7 +732,7 @@ hpcrun -e gpu=amd -e rocm:::TCC_HIT_sum:device=0  -e rocm:::TCC_MISS_sum:
 
 圖 13.29 展示了與 GPU 調用上下文相關聯的硬體計數器指標的資料庫。利用 hpcviewer 的指標過濾功能，我們隱藏了帶有獨占命中和未命中指標的列，並計算 TCC 未命中率為 100 × misses/(hits + misses)。
 
-圖 13.29 顯示，對於 FloydWarshallPass 核心，TCC 未命中率僅為 6.87\%，但對於 Line 356 的一對 hipHostMalloc 操作，未命中率達到了 100\%。這些資訊對於識別 GPU 程式碼上下文中記憶體層次結構利用率較差的部分非常有用。
+圖 13.29 顯示，對於 FloydWarshallPass kernel，TCC 未命中率僅為 6.87\%，但對於 Line 356 的一對 hipHostMalloc 操作，未命中率達到了 100\%。這些資訊對於識別 GPU 程式碼上下文中記憶體層次結構利用率較差的部分非常有用。
 
 \begin{figure}
     \centering
@@ -780,8 +780,8 @@ Linaro MAP 是一款平行剖析工具，幫助程式設計師識別應用程式
     \begin{itemize}
         \item 各部分程式碼中使用的向量化指令（包括 AVX 擴展）的百分比，
         \item 記憶體操作所耗費的時間及其在時間與進程間的變化，以識別任何快取瓶頸，
-        \item 聚合進程與核心的可視化摘要，以突出程式碼中的任何不平衡區域，
-        \item GPU 指標收集與 GPU 核心檢測。
+        \item 聚合進程與kernel的可視化摘要，以突出程式碼中的任何不平衡區域，
+        \item GPU 指標收集與 GPU kernel檢測。
     \end{itemize}
 \end{itemize}
 
@@ -807,11 +807,11 @@ Linaro Performance Reports 基於 Linaro MAP 自適應採樣技術，該技術�
 
 \subsection{Linaro DDT來做GPU debugging}
 
-Linaro DDT 可用於除錯使用 AMD GPU 設備的程式。運行於 GPU 上的程式碼與主機 CPU 上的程式碼可同時進行除錯。Linaro DDT 支援 AMD ROCm 軟體堆疊。
+Linaro DDT 可用於除錯使用 AMD GPU device的程式。運行於 GPU 上的程式碼與host CPU 上的程式碼可同時進行除錯。Linaro DDT 支援 AMD ROCm 軟體堆疊。
 
 要使用 Linaro DDT 除錯 GPU 程式，需要具備啟用了 GPU 支援的授權密鑰。此功能是一個附加選項。如果 DDT 授權中未包含 GPU 支援，則在運行對話框中 GPU 選項將被禁用。
 
-使用 AMD ROCm hipcc 編譯器時，核心程式必須使用 -g 標誌進行編譯。以下語法可生成除錯器所需的符號資訊，並禁用某些可能妨礙除錯的優化：
+使用 AMD ROCm hipcc 編譯器時，kernel程式必須使用 -g 標誌進行編譯。以下語法可生成除錯器所需的符號資訊，並禁用某些可能妨礙除錯的優化：
 
 \begin{lstlisting}
 $ hipcc –g -O0 -o program_name source_file.cpp
@@ -829,13 +829,13 @@ $ ddt --rocm <program_name> [arguments]
     \label{fig:PAPI30}
 \end{figure}
 
-確保在點擊 Run/Submit 之前，在運行對話框中選擇 ROCm。要控制 GPU 執行緒，可以使用標準的播放、暫停和斷點控制功能。這些功能同樣適用於控制 GPU 核心的執行。然而，由於 GPU 的執行模型與 CPU 不同，因此存在一些行為上的差異，如下所述。
+確保在點擊 Run/Submit 之前，在運行對話框中選擇 ROCm。要控制 GPU 執行緒，可以使用標準的播放、暫停和斷點控制功能。這些功能同樣適用於控制 GPU kernel的執行。然而，由於 GPU 的執行模型與 CPU 不同，因此存在一些行為上的差異，如下所述。
 
 GPU 斷點的設置方式與其他斷點相同。在 Source Code viewer 中右鍵點擊希望設置斷點的位置，然後選擇添加斷點。斷點會影響所有 GPU 執行緒，當執行緒到達該斷點時，程式會停止。
 
-GPU 的執行模型與主機 CPU 的執行模型明顯不同。在執行單步操作（如 step in、step over 或 step out）時，有一些關鍵的不同點需要注意。GPU 上最小的執行單元是 wavefront，在當前的 AMD GPU 上，每個 wavefront 包含 64 個執行緒。wavefront 中的所有執行緒以鎖步方式執行，這意味著無法單獨對每個執行緒進行單步操作。
+GPU 的執行模型與host CPU 的執行模型明顯不同。在執行單步操作（如 step in、step over 或 step out）時，有一些關鍵的不同點需要注意。GPU 上最小的執行單元是 wavefront，在當前的 AMD GPU 上，每個 wavefront 包含 64 個執行緒。wavefront 中的所有執行緒以鎖步方式執行，這意味著無法單獨對每個執行緒進行單步操作。
 
-點擊 Play/Continue 可運行所有 GPU 執行緒。可以使用 條件斷點在特定的塊、wavefront 或執行緒處暫停執行。然而，在這種情況下，該 wavefront 中的所有執行緒都會停止。點擊 Pause 可暫停正在運行的核心。
+點擊 Play/Continue 可運行所有 GPU 執行緒。可以使用 條件斷點在特定的塊、wavefront 或執行緒處暫停執行。然而，在這種情況下，該 wavefront 中的所有執行緒都會停止。點擊 Pause 可暫停正在運行的kernel。
 
 \begin{figure}
     \centering
@@ -848,7 +848,7 @@ GPU 的執行模型與主機 CPU 的執行模型明顯不同。在執行單步�
 
 Thread Selector 允許您選擇當前的 GPU 執行緒。當前選擇的執行緒將用於變數評估視窗，以及各種 GPU 單步操作。
 
-在 圖 13.31 中，第一個條目指定了區塊索引。隨後的條目指定了該區塊內的 3D 執行緒索引。更改當前執行緒會更新局部變數、評估結果、當前顯示的行，還會更新顯示的源碼，為您提供 GPU 核心狀態的視角。Thread Selector 還會顯示程式中網格和區塊的維度。只有在被加載到 GPU 的區塊集合中，才能檢視/控制執行緒。如果您嘗試選擇當前未加載的執行緒，將顯示一條消息。當有活動的 GPU 核心 時，Thread Selector 才會顯示。
+在 圖 13.31 中，第一個條目指定了區塊索引。隨後的條目指定了該區塊內的 3D 執行緒索引。更改當前執行緒會更新局部變數、評估結果、當前顯示的行，還會更新顯示的源碼，為您提供 GPU kernel狀態的視角。Thread Selector 還會顯示程式中網格和區塊的維度。只有在被加載到 GPU 的區塊集合中，才能檢視/控制執行緒。如果您嘗試選擇當前未加載的執行緒，將顯示一條消息。當有活動的 GPU kernel 時，Thread Selector 才會顯示。
 
 \begin{figure}
     \centering
@@ -871,11 +871,11 @@ Thread Selector 允許您選擇當前的 GPU 執行緒。當前選擇的執行�
     \label{fig:PAPI33}
 \end{figure}
 
-如 圖 13.33 所示，當一個核心正在執行時，Kernel Progress View 標籤會預設顯示在用戶介面的底部。此視圖提供必要的細節，以幫助您在除錯過程中判斷陣列數據是新鮮的還是陳舊的（即，該陣列是否與活動執行緒相關聯）。
+如 圖 13.33 所示，當一個kernel正在執行時，Kernel Progress View 標籤會預設顯示在用戶介面的底部。此視圖提供必要的細節，以幫助您在除錯過程中判斷陣列數據是新鮮的還是陳舊的（即，該陣列是否與活動執行緒相關聯）。
 
-對於一個為陣列中每個索引計算輸出值的簡單核心來說，很難檢查陣列中特定位置 x 的值是否已被計算，或者計算該值的執行緒是否已被調度。這與標量程式設計形成鮮明對比，後者中如果一個（向上）迴圈的計數器超過 x，那麼索引 x 的值可視為最終值。
+對於一個為陣列中每個索引計算輸出值的簡單kernel來說，很難檢查陣列中特定位置 x 的值是否已被計算，或者計算該值的執行緒是否已被調度。這與標量程式設計形成鮮明對比，後者中如果一個（向上）迴圈的計數器超過 x，那麼索引 x 的值可視為最終值。
 
-Kernel Progress View（見 圖 13.33）標識了正在進行的核心。該視圖提供核心的數量，並根據不同的核心標識符（核心名稱）按進程進行分組。彩色進度條顯示了哪些 GPU 執行緒正在執行。進度條是對 GPU 區塊和執行緒索引系統的直線投影，說明了程式中正在運行的核心的大小。
+Kernel Progress View（見 圖 13.33）標識了正在進行的kernel。該視圖提供kernel的數量，並根據不同的kernel標識符（kernel名稱）按進程進行分組。彩色進度條顯示了哪些 GPU 執行緒正在執行。進度條是對 GPU 區塊和執行緒索引系統的直線投影，說明了程式中正在運行的kernel的大小。
 
 \begin{figure}
     \centering
@@ -889,14 +889,14 @@ Kernel Progress View（見 圖 13.33）標識了正在進行的核心。該視�
     \item 藍色：表示所選的 GPU 執行緒。
     \item 綠色：表示已排程運行的 GPU 執行緒。多個已排程的執行緒以不同深淺的綠色區分。
     \item 白色：表示進度條中的非活動區域。它們處於非活動狀態可能是因為已經運行過，或者未被排程運行。
-    \item 擁有相同名稱的核心會被堆疊，綠色的深淺會加深（見 圖 13.34）。
-    \item 擁有不同名稱的核心顯示在單獨的行中。
+    \item 擁有相同名稱的kernel會被堆疊，綠色的深淺會加深（見 圖 13.34）。
+    \item 擁有不同名稱的kernel顯示在單獨的行中。
 \end{itemize}
 
 
 \subsubsection{原始碼檢視器}
 
-Source Code viewer 幫助您通過高亮顯示當前堆疊追蹤中的行來可視化程式碼中的程式流程。在除錯 GPU 核心時，它會對具有可用 GPU 執行緒的行進行顏色高亮，並以類似於常規 CPU 執行緒和進程的方式顯示 GPU 執行緒。
+Source Code viewer 幫助您通過高亮顯示當前堆疊追蹤中的行來可視化程式碼中的程式流程。在除錯 GPU kernel時，它會對具有可用 GPU 執行緒的行進行顏色高亮，並以類似於常規 CPU 執行緒和進程的方式顯示 GPU 執行緒。
 
 要查看高亮行上 GPU 執行緒的摘要，可將滑鼠懸停在 Source Code viewer 中的該行上。
 
@@ -910,7 +910,7 @@ Source Code viewer 幫助您通過高亮顯示當前堆疊追蹤中的行來可�
     \label{fig:PAPI35}
 \end{figure}
 
-GPU 程式設計的一個挑戰是發現設備參數，例如設備類型以及設備是否存在。GPU Devices 標籤（見 圖 13.35）列出了程式中存在並被使用的 GPU，並為多進程系統提供了可擴展的分組資訊（基於相似特性，如 GPU 型號進行分組）。
+GPU 程式設計的一個挑戰是發現device參數，例如device類型以及device是否存在。GPU Devices 標籤（見 圖 13.35）列出了程式中存在並被使用的 GPU，並為多進程系統提供了可擴展的分組資訊（基於相似特性，如 GPU 型號進行分組）。
 
 \subsection{使用 Linaro MAP 進行 GPU 分析}
 
@@ -921,9 +921,9 @@ GPU 程式設計的一個挑戰是發現設備參數，例如設備類型以及�
     \label{fig:PAPI36}
 \end{figure}
 
-在處理 AMD ROCm 程式時，可以使用 Linaro MAP 的 GPU 剖析功能。當檢測到 ROCm 函式庫時，AMD GPU 剖析會預設啟用。在使用 AMD ROCm CPU 的程式中，等待 GPU 核心完成的時間會以紫色顯示。
+在處理 AMD ROCm 程式時，可以使用 Linaro MAP 的 GPU 剖析功能。當檢測到 ROCm 函式庫時，AMD GPU 剖析會預設啟用。在使用 AMD ROCm CPU 的程式中，等待 GPU kernel完成的時間會以紫色顯示。
 
-在 圖 13.36 中，展示了一個混合了 MPI 和 HIP 的應用程式範例，其中兩個進程各自執行了一個 HIP 核心，另一個進程則以串行方式執行。
+在 圖 13.36 中，展示了一個混合了 MPI 和 HIP 的應用程式範例，其中兩個進程各自執行了一個 HIP kernel，另一個進程則以串行方式執行。
 
 要在 Linaro MAP 中查看源碼，請使用以下方式啟用除錯標誌編譯程式。請勿使用純除錯構建。在使用 Linaro MAP 進行剖析時，請始終保持啟用最佳化標誌：
 
@@ -941,7 +941,7 @@ $ map <program_name> [arguments]
 指標包括：
 
 \begin{itemize}
-    \item GPU 利用率：GPU 使用的百分比，包括一個或多個核心在 GPU 卡上執行。如果計算節點上存在多張卡，該值為該節點上所有卡的平均值。
+    \item GPU 利用率：GPU 使用的百分比，包括一個或多個kernel在 GPU 卡上執行。如果計算節點上存在多張卡，該值為該節點上所有卡的平均值。
     \item GPU 記憶體使用率：GPU 上已分配的記憶體，作為 GPU 可用記憶體總量的百分比。
     \item GPU 記憶體利用率：GPU 記憶體使用的時間百分比。如果計算節點上存在多張卡，該值為該節點上所有卡的平均值。
 \end{itemize}
@@ -953,7 +953,7 @@ $ map <program_name> [arguments]
     \label{fig:PAPI37}
 \end{figure}
 
-在剖析 AMD GPU 程式時，可追蹤的 GPU 核心將顯示在 GPU Kernels 標籤中，如 圖 13.38 所示。
+在剖析 AMD GPU 程式時，可追蹤的 GPU kernel將顯示在 GPU Kernels 標籤中，如 圖 13.38 所示。
 
 \begin{figure}
     \centering
@@ -962,7 +962,7 @@ $ map <program_name> [arguments]
     \label{fig:PAPI38}
 \end{figure}
 
-此視圖列出了程式中檢測到的 GPU 核心，並附有圖表顯示它們處於活動狀態的時間。如果在特定的剖析樣本中同一進程內檢測到多個核心，這些核心在圖表中被賦予相等的權重。選擇單個 GPU 核心時，如果有可用的除錯資訊，Source Code viewer 會跳轉到該核心的源碼位置。
+此視圖列出了程式中檢測到的 GPU kernel，並附有圖表顯示它們處於活動狀態的時間。如果在特定的剖析樣本中同一進程內檢測到多個kernel，這些kernel在圖表中被賦予相等的權重。選擇單個 GPU kernel時，如果有可用的除錯資訊，Source Code viewer 會跳轉到該kernel的源碼位置。
 
 \subsection{GPU效能報告}
 
@@ -984,7 +984,7 @@ $ perf-report <program_name> [arguments]
 
 報告中的指標包括：
 \begin{itemize}
-    \item GPU 利用率：GPU 上一個或多個核心執行的時間百分比，取所有可用 GPU 的平均值。
+    \item GPU 利用率：GPU 上一個或多個kernel執行的時間百分比，取所有可用 GPU 的平均值。
     \item 平均 GPU 記憶體使用量：GPU 卡上使用的記憶體平均值。
     \item 峰值 GPU 記憶體使用量：GPU 卡上使用的記憶體最大值。
 \end{itemize}
